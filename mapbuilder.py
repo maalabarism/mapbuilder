@@ -404,11 +404,17 @@ class windowCreateImgBlock(wx.Frame):
         self.tempColor : wx.Colour = defaultColor
         self.tempColor2 : wx.Colour = defaultColor
 
+        self.drawingMode : str = ""
+
         self.pos1 = None
         self.pos2 = None
 
         self.basicGUI()
-        self.getDialog(self)
+        self.getDrawingModeDialog(self)
+        if(self.drawingMode == "Painting Mode"):
+            self.getDialog(self)
+        else:
+            self.getDialog2(self)
         
         global isConfigSet2
         isConfigSet2 = True
@@ -490,12 +496,49 @@ class windowCreateImgBlock(wx.Frame):
 
         self.Show(True)
 
+    def getDrawingModeDialog(self, e):
+        dlg = GetModeData(parent = self.panel)
+        dlg.ShowModal()
+        if dlg.drawingMode:
+            if dlg.isDataThere == True:
+                self.log1.AppendText("hereherehere\n")
+                self.drawingMode = dlg.drawingMode # 2 options: drawing mode or matrix mode.
+                print(self.drawingMode)
+                #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
+                #self.log.AppendText("x-dir total size(px): "+ dlg.x_totalSize +"\n")
+                #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
+            else:
+               self.log1.AppendText("No input found\n") 
     def getDialog(self, e):
         dlg = GetData2(parent = self.panel)
         dlg.ShowModal()
         if dlg.x_totalSize:
             if dlg.isDataThere == True:
                 self.log1.AppendText(" x-dir total size(px): " + dlg.x_totalSize + " y-dir total size(px): " + dlg.y_totalSize + "\n")
+                self.x_totalSize = dlg.x_totalSize
+                self.y_totalSize = dlg.y_totalSize
+                #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
+                #self.log.AppendText("x-dir total size(px): "+ dlg.x_totalSize +"\n")
+                #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
+            else:
+               self.log1.AppendText("No input found\n") 
+        else:
+            self.log1.AppendText("No input found\n")
+        
+        if dlg.isDataThere:
+            self.displayMap(self)
+        #self.log2 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(0, 60), size=(int(dlg.x_totalSize), int(dlg.y_totalSize)), style = wx.TE_MULTILINE | wx.VSCROLL)
+        dlg.Destroy()
+
+    def getDialog2(self, e):
+        dlg = GetData(parent = self.panel)
+        dlg.ShowModal()
+        if dlg.result_x_dir:
+            if dlg.isDataThere == True:
+                self.log1.AppendText("x-dir(px): "+ dlg.result_x_dir + " y-dir(px): "+ dlg.result_y_dir +" x-dir total size(px): " 
+                + dlg.x_totalSize + " y-dir total size(px): " + dlg.y_totalSize + "\n")
+                self.result_x_dir = dlg.result_x_dir
+                self.result_y_dir = dlg.result_y_dir
                 self.x_totalSize = dlg.x_totalSize
                 self.y_totalSize = dlg.y_totalSize
                 #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
@@ -767,6 +810,37 @@ class windowCreateImgBlock(wx.Frame):
     def Quit(self, e):
         self.Close()
 
+class GetModeData(wx.Dialog):
+    def __init__(self, parent):
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, "Create Image Block", size= (470,320))
+        self.panel = wx.Panel(self, wx.ID_ANY)
+
+        self.lblname = wx.StaticText(self.panel, label="Choose drawing mode:", pos=(20,20))
+        #self.x_dir = wx.TextCtrl(self.panel, value="", pos=(140,20), size=(100,-1))#pos=(110,20)
+
+        self.drawingModeList = ["Matrix Mode", "Painting Mode"]
+
+        self.drawingModeRadioBox : wx.RadioBox = wx.RadioBox(self.panel, label = 'Choose', pos = (20,40), choices = self.drawingModeList, majorDimension = 1, style = wx.RA_SPECIFY_ROWS)
+
+        self.saveButton = wx.Button(self.panel, id=wx.ID_OK, label="Save", pos=(140,220))
+        self.saveButton.SetDefault()
+
+        self.closeButton = wx.Button(self.panel, label="Cancel", pos=(240,220))#pos=(240,240))
+        self.saveButton.Bind(wx.EVT_BUTTON, self.SaveDrawingMode)
+        self.closeButton.Bind(wx.EVT_BUTTON, self.OnQuit)
+        self.Bind(wx.EVT_CLOSE, self.OnQuit)
+        self.Show()
+    
+    def SaveDrawingMode(self, event):
+        index1: int = self.drawingModeRadioBox.GetSelection()
+        self.drawingMode = self.drawingModeList[index1]
+        self.isDataThere = True
+        self.Destroy()
+
+    def OnQuit(self, event):
+        #self.result_name = None
+        self.Destroy()
+
 class GetData(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, wx.ID_ANY, "Create Image Block", size= (470,320))
@@ -791,6 +865,27 @@ class GetData(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.OnQuit)
         self.Show()
 
+    def SaveConnString(self, event):
+        self.result_x_dir = self.x_dir.GetValue()
+        self.result_y_dir = self.y_dir.GetValue()
+        self.x_totalSize = self.x_totalSize2.GetValue()
+        self.y_totalSize = self.y_totalSize2.GetValue()
+        if (int(self.x_totalSize) % int(self.result_x_dir) == 0) & (int(self.y_totalSize) % int(self.result_y_dir) == 0):
+            self.isDataThere = True
+            self.Destroy()
+        else:
+            self.isDataThere = False
+            errormessage = wx.StaticText(self.panel, label="ERROR", pos=(260,70))
+            errormessage.SetForegroundColour("#FF0000")
+            errormessage2 = wx.StaticText(self.panel, label="numbers must be divisible", pos=(260,90))
+            errormessage2.SetForegroundColour("#FF0000")
+            errormessage3 = wx.StaticText(self.panel, label="with no remainder.", pos=(260,110))
+            errormessage3.SetForegroundColour("#FF0000")
+    
+    def OnQuit(self, event):
+        #self.result_name = None
+        self.Destroy()
+
 class GetData2(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, wx.ID_ANY, "Create Image Block", size= (470,220))
@@ -809,27 +904,6 @@ class GetData2(wx.Dialog):
         self.closeButton.Bind(wx.EVT_BUTTON, self.OnQuit)
         self.Bind(wx.EVT_CLOSE, self.OnQuit)
         self.Show()
-
-    def OnQuit(self, event):
-        #self.result_name = None
-        self.Destroy()
-
-    def SaveConnString(self, event):
-        self.result_x_dir = self.x_dir.GetValue()
-        self.result_y_dir = self.y_dir.GetValue()
-        self.x_totalSize = self.x_totalSize2.GetValue()
-        self.y_totalSize = self.y_totalSize2.GetValue()
-        if (int(self.x_totalSize) % int(self.result_x_dir) == 0) & (int(self.y_totalSize) % int(self.result_y_dir) == 0):
-            self.isDataThere = True
-            self.Destroy()
-        else:
-            self.isDataThere = False
-            errormessage = wx.StaticText(self.panel, label="ERROR", pos=(260,70))
-            errormessage.SetForegroundColour("#FF0000")
-            errormessage2 = wx.StaticText(self.panel, label="numbers must be divisible", pos=(260,90))
-            errormessage2.SetForegroundColour("#FF0000")
-            errormessage3 = wx.StaticText(self.panel, label="with no remainder.", pos=(260,110))
-            errormessage3.SetForegroundColour("#FF0000")
 
     def SaveConnString2(self, event):
         self.x_totalSize = self.x_totalSize2.GetValue()
