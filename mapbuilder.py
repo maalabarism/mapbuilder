@@ -12,6 +12,7 @@ isConfigSet2 = False
 isSelectedImageSet = False
 drawBool = False
 drawBool2 = False
+destroyCreateBlockWindow = False
 
 class windowClass(wx.Frame):
 
@@ -388,6 +389,7 @@ class windowClass(wx.Frame):
         dlg.Destroy()
 
     def Quit(self, e):
+        self.Destroy()
         self.Close()
 
 class windowCreateImgBlock(wx.Frame):
@@ -411,10 +413,26 @@ class windowCreateImgBlock(wx.Frame):
 
         self.basicGUI()
         self.getDrawingModeDialog(self)
-        if(self.drawingMode == "Painting Mode"):
-            self.getDialog(self)
+        global destroyCreateBlockWindow
+        if destroyCreateBlockWindow:
+            #destroy window
+            destroyCreateBlockWindow = False
+            self.Destroy()
         else:
-            self.getDialog2(self)
+            if(self.drawingMode == "Painting Mode"):
+                self.getDialog2(self)
+                if destroyCreateBlockWindow:
+                    #destroy window
+                    destroyCreateBlockWindow = False
+                    self.Destroy()
+            else:
+                self.getDialog(self)
+                if destroyCreateBlockWindow:
+                    #destroy window
+                    destroyCreateBlockWindow = False
+                    self.Destroy()
+
+        
         
         global isConfigSet2
         isConfigSet2 = True
@@ -499,7 +517,9 @@ class windowCreateImgBlock(wx.Frame):
     def getDrawingModeDialog(self, e):
         dlg = GetModeData(parent = self.panel)
         dlg.ShowModal()
-        if dlg.drawingMode:
+        global destroyCreateBlockWindow
+
+        if destroyCreateBlockWindow == False:
             if dlg.isDataThere == True:
                 self.log1.AppendText("hereherehere\n")
                 self.drawingMode = dlg.drawingMode # 2 options: drawing mode or matrix mode.
@@ -509,50 +529,49 @@ class windowCreateImgBlock(wx.Frame):
                 #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
             else:
                self.log1.AppendText("No input found\n") 
-    def getDialog(self, e):
+    def getDialog2(self, e):
         dlg = GetData2(parent = self.panel)
         dlg.ShowModal()
-        if dlg.x_totalSize:
-            if dlg.isDataThere == True:
-                self.log1.AppendText(" x-dir total size(px): " + dlg.x_totalSize + " y-dir total size(px): " + dlg.y_totalSize + "\n")
-                self.x_totalSize = dlg.x_totalSize
-                self.y_totalSize = dlg.y_totalSize
-                #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
-                #self.log.AppendText("x-dir total size(px): "+ dlg.x_totalSize +"\n")
-                #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
-            else:
-               self.log1.AppendText("No input found\n") 
-        else:
-            self.log1.AppendText("No input found\n")
-        
-        if dlg.isDataThere:
+        if dlg.isDataThere == True:
+            self.log1.AppendText(" x-dir total size(px): " + dlg.x_totalSize + " y-dir total size(px): " + dlg.y_totalSize + "\n")
+            self.x_totalSize = dlg.x_totalSize
+            self.y_totalSize = dlg.y_totalSize
+            #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
+            #self.log.AppendText("x-dir total size(px): "+ dlg.x_totalSize +"\n")
+            #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
             self.displayMap(self)
+            dlg.Destroy()
+        else:
+            global destroyCreateBlockWindow
+            destroyCreateBlockWindow = True
+        '''if dlg.isDataThere:
+            self.displayMap(self)
+            dlg.Destroy()'''
         #self.log2 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(0, 60), size=(int(dlg.x_totalSize), int(dlg.y_totalSize)), style = wx.TE_MULTILINE | wx.VSCROLL)
-        dlg.Destroy()
+        #dlg.Destroy()
 
-    def getDialog2(self, e):
+    def getDialog(self, e):
         dlg = GetData(parent = self.panel)
         dlg.ShowModal()
-        if dlg.result_x_dir:
-            if dlg.isDataThere == True:
-                self.log1.AppendText("x-dir(px): "+ dlg.result_x_dir + " y-dir(px): "+ dlg.result_y_dir +" x-dir total size(px): " 
-                + dlg.x_totalSize + " y-dir total size(px): " + dlg.y_totalSize + "\n")
-                self.result_x_dir = dlg.result_x_dir
-                self.result_y_dir = dlg.result_y_dir
-                self.x_totalSize = dlg.x_totalSize
-                self.y_totalSize = dlg.y_totalSize
-                #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
-                #self.log.AppendText("x-dir total size(px): "+ dlg.x_totalSize +"\n")
-                #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
-            else:
-               self.log1.AppendText("No input found\n") 
-        else:
-            self.log1.AppendText("No input found\n")
-        
-        if dlg.isDataThere:
+        if dlg.isDataThere == True:
+            self.log1.AppendText("x-dir(px): "+ dlg.result_x_dir + " y-dir(px): "+ dlg.result_y_dir +" x-dir total size(px): " 
+            + dlg.x_totalSize + " y-dir total size(px): " + dlg.y_totalSize + "\n")
+            self.result_x_dir = dlg.result_x_dir
+            self.result_y_dir = dlg.result_y_dir
+            self.x_totalSize = dlg.x_totalSize
+            self.y_totalSize = dlg.y_totalSize
+            #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
+            #self.log.AppendText("x-dir total size(px): "+ dlg.x_totalSize +"\n")
+            #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
             self.displayMap(self)
+            dlg.Destroy()
+        else:
+            global destroyCreateBlockWindow
+            destroyCreateBlockWindow = True
+        '''if dlg.isDataThere:
+            self.displayMap(self)
+            dlg.Destroy()'''
         #self.log2 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(0, 60), size=(int(dlg.x_totalSize), int(dlg.y_totalSize)), style = wx.TE_MULTILINE | wx.VSCROLL)
-        dlg.Destroy()
 
     def displayMap(self, e):
         self.bitmapForMap = wx.Bitmap(width=int(self.x_totalSize), height=int(self.y_totalSize))
@@ -598,13 +617,26 @@ class windowCreateImgBlock(wx.Frame):
         with open(pathname, "rb") as image_file:
             data = base64.b64encode(image_file.read())
 
-        f = open(pathname, "w")
-        str1 = str(self.x_totalSize) + "\n"
-        str2 = str(self.y_totalSize) + "\n"
-        f.write(str1)
-        f.write(str2)
-        datastr = data.decode("utf-8")
-        f.write(datastr)
+        if self.drawingMode == "Drawing Mode":
+            f = open(pathname, "w")
+            str1 = str(self.x_totalSize) + "\n"
+            str2 = str(self.y_totalSize) + "\n"
+            f.write(str1)
+            f.write(str2)
+            datastr = data.decode("utf-8")
+            f.write(datastr)
+        else:
+            f = open(pathname, "w")
+            str1 = str(self.result_x_dir) + "\n"
+            str2 = str(self.result_y_dir) + "\n"
+            str3 = str(self.x_totalSize) + "\n"
+            str4 = str(self.y_totalSize) + "\n"
+            f.write(str1)
+            f.write(str2)
+            f.write(str3)
+            f.write(str4)
+            datastr = data.decode("utf-8")
+            f.write(datastr)
         
         openFileDialog.Destroy()
 
@@ -618,25 +650,56 @@ class windowCreateImgBlock(wx.Frame):
             pathname = openFileDialog.GetPath()
             pathname2 = "C:\\Users\\change\\source\\Python\\mapbuilder\\test2.smp"
 
-            image_file = open(pathname, "r")
-            self.x_totalSize = image_file.readlines()[0]
-            self.x_totalSize = self.x_totalSize.replace("\n", "")
-            image_file.close()
+            if self.drawingMode == "Drawing Mode":
+                image_file = open(pathname, "r")
+                self.x_totalSize = image_file.readlines()[0]
+                self.x_totalSize = self.x_totalSize.replace("\n", "")
+                image_file.close()
 
-            image_file = open(pathname, "r")
-            self.y_totalSize = image_file.readlines()[1]
-            self.y_totalSize = self.y_totalSize.replace("\n", "")
-            image_file.close()
+                image_file = open(pathname, "r")
+                self.y_totalSize = image_file.readlines()[1]
+                self.y_totalSize = self.y_totalSize.replace("\n", "")
+                image_file.close()
 
-            print("pathname: " + pathname)
-            image_file2 = open(pathname, "r")
-            list1 = image_file2.readlines()
-            list1_len = len(list1)
-            image_file2.close()
+                print("pathname: " + pathname)
+                image_file2 = open(pathname, "r")
+                list1 = image_file2.readlines()
+                list1_len = len(list1)
+                image_file2.close()
 
-            image_file2 = open(pathname, "r")
-            listfinal = image_file2.readlines()[2:list1_len]
-            image_file2.close()
+                image_file2 = open(pathname, "r")
+                listfinal = image_file2.readlines()[2:list1_len]
+                image_file2.close()
+            else: 
+                image_file = open(pathname, "r")
+                self.result_x_dir = image_file.readlines()[0]
+                self.result_x_dir = self.x_totalSize.replace("\n", "")
+                image_file.close()
+
+                image_file = open(pathname, "r")
+                self.result_y_dir = image_file.readlines()[1]
+                self.result_y_dir = self.y_totalSize.replace("\n", "")
+                image_file.close()
+                
+                image_file = open(pathname, "r")
+                self.x_totalSize = image_file.readlines()[2]
+                self.x_totalSize = self.x_totalSize.replace("\n", "")
+                image_file.close()
+
+                image_file = open(pathname, "r")
+                self.y_totalSize = image_file.readlines()[3]
+                self.y_totalSize = self.y_totalSize.replace("\n", "")
+                image_file.close()
+
+                print("pathname: " + pathname)
+                image_file2 = open(pathname, "r")
+                list1 = image_file2.readlines()
+                list1_len = len(list1)
+                image_file2.close()
+
+                image_file2 = open(pathname, "r")
+                listfinal = image_file2.readlines()[4:list1_len]
+                image_file2.close()
 
             str1 : str = ""
             for x in listfinal:
@@ -818,9 +881,10 @@ class GetModeData(wx.Dialog):
         self.lblname = wx.StaticText(self.panel, label="Choose drawing mode:", pos=(20,20))
         #self.x_dir = wx.TextCtrl(self.panel, value="", pos=(140,20), size=(100,-1))#pos=(110,20)
 
+        self.drawingMode : str
         self.drawingModeList = ["Matrix Mode", "Painting Mode"]
 
-        self.drawingModeRadioBox : wx.RadioBox = wx.RadioBox(self.panel, label = 'Choose', pos = (20,40), choices = self.drawingModeList, majorDimension = 1, style = wx.RA_SPECIFY_ROWS)
+        self.drawingModeRadioBox : wx.RadioBox = wx.RadioBox(self.panel, label = 'Choose', pos = (20,60), choices = self.drawingModeList, majorDimension = 1, style = wx.RA_SPECIFY_ROWS)
 
         self.saveButton = wx.Button(self.panel, id=wx.ID_OK, label="Save", pos=(140,220))
         self.saveButton.SetDefault()
@@ -832,17 +896,20 @@ class GetModeData(wx.Dialog):
         self.Show()
     
     def SaveDrawingMode(self, event):
-        index1: int = self.drawingModeRadioBox.GetSelection()
+        index1 : int = self.drawingModeRadioBox.GetSelection()
         self.drawingMode = self.drawingModeList[index1]
         self.isDataThere = True
         self.Destroy()
 
     def OnQuit(self, event):
         #self.result_name = None
+        global destroyCreateBlockWindow
+        destroyCreateBlockWindow = True
         self.Destroy()
 
 class GetData(wx.Dialog):
     def __init__(self, parent):
+        self.isDataThere = False
         wx.Dialog.__init__(self, parent, wx.ID_ANY, "Create Image Block", size= (470,320))
         self.panel = wx.Panel(self, wx.ID_ANY)
 
@@ -884,10 +951,12 @@ class GetData(wx.Dialog):
     
     def OnQuit(self, event):
         #self.result_name = None
+        self.isDataThere = False
         self.Destroy()
 
 class GetData2(wx.Dialog):
     def __init__(self, parent):
+        self.isDataThere = False
         wx.Dialog.__init__(self, parent, wx.ID_ANY, "Create Image Block", size= (470,220))
         self.panel = wx.Panel(self, wx.ID_ANY)
 
@@ -922,7 +991,9 @@ class GetData2(wx.Dialog):
 
     def OnQuit(self, event):
         #self.result_name = None
+        self.isDataThere = False
         self.Destroy()
+        self.Close()
 
 class ShowHelpDialog(wx.Dialog):
         def __init__(self, parent):
@@ -968,6 +1039,7 @@ class ShowHelpDialog(wx.Dialog):
         
         def OnQuit(self, event):
             self.Destroy()
+            self.Close()
 
 
 class TestPanel(scrolled.ScrolledPanel):
