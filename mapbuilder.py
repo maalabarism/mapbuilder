@@ -596,9 +596,17 @@ class windowCreateImgBlock(wx.Frame):
         if openFileDialog.ShowModal() == wx.ID_CANCEL:
             return
         # save the current contents in the file
+        #if self.magnifyVal > 1 then must rescale to x1 and then save file as png, for both drawing modes.
+
         pathname = openFileDialog.GetPath()
         savedImageBitmap : wx.Bitmap = self.staticbitmap.GetBitmap()
+
+        sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSize))
+
+        wx.Bitmap.Rescale(savedImageBitmap, sizeNeeded)
+
         savedImage : wx.Image = savedImageBitmap.ConvertToImage()
+        
         savedImage.SaveFile(pathname, type=wx.BITMAP_TYPE_PNG)
         openFileDialog.Destroy()
 
