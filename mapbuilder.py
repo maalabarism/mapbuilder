@@ -588,6 +588,7 @@ class windowCreateImgBlock(wx.Frame):
         self.staticbitmap.Refresh()
         self.staticbitmap.SetBitmap(self.bitmapForMap)
         self.staticbitmap.Refresh()
+        
 
     def SaveFile(self, event):
         defaultpath = '.'
@@ -601,7 +602,7 @@ class windowCreateImgBlock(wx.Frame):
         pathname = openFileDialog.GetPath()
         savedImageBitmap : wx.Bitmap = self.staticbitmap.GetBitmap()
 
-        sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSize))
+        sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSicze))
 
         wx.Bitmap.Rescale(savedImageBitmap, sizeNeeded)
 
@@ -619,13 +620,19 @@ class windowCreateImgBlock(wx.Frame):
         # save the current contents in the file
         pathname = openFileDialog.GetPath()
         savedImageBitmap : wx.Bitmap = self.staticbitmap.GetBitmap()
+    
+        #############################################################################################NEWSTUFF
+        sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSize))
+        wx.Bitmap.Rescale(savedImageBitmap, sizeNeeded)
+        #############################################################################################
+
         savedImage : wx.Image = savedImageBitmap.ConvertToImage()
         savedImage.SaveFile(pathname, type=wx.BITMAP_TYPE_PNG)
 
         with open(pathname, "rb") as image_file:
             data = base64.b64encode(image_file.read())
 
-        if self.drawingMode == "Drawing Mode":
+        if self.drawingMode == "Painting Mode":
             f = open(pathname, "w")
             str1 = str(self.x_totalSize) + "\n"
             str2 = str(self.y_totalSize) + "\n"
@@ -658,7 +665,7 @@ class windowCreateImgBlock(wx.Frame):
             pathname = openFileDialog.GetPath()
             pathname2 = "C:\\Users\\change\\source\\Python\\mapbuilder\\test2.smp"
 
-            if self.drawingMode == "Drawing Mode":
+            if self.drawingMode == "Painting Mode":
                 image_file = open(pathname, "r")
                 self.x_totalSize = image_file.readlines()[0]
                 self.x_totalSize = self.x_totalSize.replace("\n", "")
