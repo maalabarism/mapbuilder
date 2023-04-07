@@ -426,7 +426,8 @@ class windowCreateImgBlock(wx.Frame):
                     destroyCreateBlockWindow = False
                     self.Destroy()
             else:
-                self.getDialog(self)
+                #self.getDialog(self)
+                self.getDialog2(self)
                 if destroyCreateBlockWindow:
                     #destroy window
                     destroyCreateBlockWindow = False
@@ -539,7 +540,7 @@ class windowCreateImgBlock(wx.Frame):
             #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
             #self.log.AppendText("x-dir total size(px): "+ dlg.x_totalSize +"\n")
             #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
-            self.displayMap(self)
+            self.displayMap2(self)
             dlg.Destroy()
         else:
             global destroyCreateBlockWindow
@@ -573,12 +574,38 @@ class windowCreateImgBlock(wx.Frame):
             dlg.Destroy()'''
         #self.log2 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(0, 60), size=(int(dlg.x_totalSize), int(dlg.y_totalSize)), style = wx.TE_MULTILINE | wx.VSCROLL)
 
-    def displayMap(self, e):
+    def displayMap2(self, e): #This is for Painting Mode
         self.bitmapForMap = wx.Bitmap(width=int(self.x_totalSize), height=int(self.y_totalSize))
         dc = wx.MemoryDC(self.bitmapForMap)
         dc.SetBrush(wx.Brush('#FFFFFF'))
         dc.DrawRectangle(0, 0, width=int(self.x_totalSize), height=int(self.y_totalSize))
 
+        self.staticbitmap.SetBitmap(self.bitmapForMap)
+
+        #self.panel.vbox.Detach(self.staticbitmap2)
+        self.panel.addToBoxSizerVbox(self.staticbitmap)
+        self.panel.setupScrolling()
+
+        self.staticbitmap.Refresh()
+        self.staticbitmap.SetBitmap(self.bitmapForMap)
+        self.staticbitmap.Refresh()
+
+    def displayMap(self, e): #This is for matrix mode
+        self.xintervals = int((int(self.x_totalSize))/(int(self.result_x_dir)))
+        self.yintervals = int((int(self.y_totalSize))/(int(self.result_y_dir)))
+        print(f"xintervals: {self.xintervals} and yintervals: {self.yintervals}")
+        self.map_2d_arr = [[0 for x in range(self.xintervals)] for y in range(self.yintervals)]
+        print(self.map_2d_arr)
+        #self.staticbitmap2 = wx.StaticBitmap(self, pos=(800, 800))#this function has position, it is for selected image displayed.
+        #self.staticbitmap2 = wx.StaticBitmap(self, pos=(10, 60))#this function has position, it is for selected image displayed.
+        self.bitmapForMap = wx.Bitmap(width=int(self.x_totalSize), height=int(self.y_totalSize))
+        dc = wx.MemoryDC(self.bitmapForMap)
+        dc.SetBrush(wx.Brush('#E5CCFF'))
+        dc.DrawRectangle(0, 0, width=int(self.x_totalSize), height=int(self.y_totalSize))
+        for x in range(self.xintervals):
+            for y in range(self.yintervals):
+                 dc.DrawRectangle((x*(int(self.result_x_dir))), (y*(int(self.result_y_dir))), width=int(self.result_x_dir), height=int(self.result_y_dir))
+        
         self.staticbitmap.SetBitmap(self.bitmapForMap)
 
         #self.panel.vbox.Detach(self.staticbitmap2)
@@ -602,7 +629,7 @@ class windowCreateImgBlock(wx.Frame):
         pathname = openFileDialog.GetPath()
         savedImageBitmap : wx.Bitmap = self.staticbitmap.GetBitmap()
 
-        sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSicze))
+        sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSize))
 
         wx.Bitmap.Rescale(savedImageBitmap, sizeNeeded)
 
@@ -632,15 +659,15 @@ class windowCreateImgBlock(wx.Frame):
         with open(pathname, "rb") as image_file:
             data = base64.b64encode(image_file.read())
 
-        if self.drawingMode == "Painting Mode":
-            f = open(pathname, "w")
-            str1 = str(self.x_totalSize) + "\n"
-            str2 = str(self.y_totalSize) + "\n"
-            f.write(str1)
-            f.write(str2)
-            datastr = data.decode("utf-8")
-            f.write(datastr)
-        else:
+        #if self.drawingMode == "Painting Mode":
+        f = open(pathname, "w")
+        str1 = str(self.x_totalSize) + "\n"
+        str2 = str(self.y_totalSize) + "\n"
+        f.write(str1)
+        f.write(str2)
+        datastr = data.decode("utf-8")
+        f.write(datastr)
+        '''else:
             f = open(pathname, "w")
             str1 = str(self.result_x_dir) + "\n"
             str2 = str(self.result_y_dir) + "\n"
@@ -651,7 +678,7 @@ class windowCreateImgBlock(wx.Frame):
             f.write(str3)
             f.write(str4)
             datastr = data.decode("utf-8")
-            f.write(datastr)
+            f.write(datastr)'''
         
         openFileDialog.Destroy()
 
@@ -665,27 +692,27 @@ class windowCreateImgBlock(wx.Frame):
             pathname = openFileDialog.GetPath()
             pathname2 = "C:\\Users\\change\\source\\Python\\mapbuilder\\test2.smp"
 
-            if self.drawingMode == "Painting Mode":
-                image_file = open(pathname, "r")
-                self.x_totalSize = image_file.readlines()[0]
-                self.x_totalSize = self.x_totalSize.replace("\n", "")
-                image_file.close()
+            #if self.drawingMode == "Painting Mode":
+            image_file = open(pathname, "r")
+            self.x_totalSize = image_file.readlines()[0]
+            self.x_totalSize = self.x_totalSize.replace("\n", "")
+            image_file.close()
 
-                image_file = open(pathname, "r")
-                self.y_totalSize = image_file.readlines()[1]
-                self.y_totalSize = self.y_totalSize.replace("\n", "")
-                image_file.close()
+            image_file = open(pathname, "r")
+            self.y_totalSize = image_file.readlines()[1]
+            self.y_totalSize = self.y_totalSize.replace("\n", "")
+            image_file.close()
 
-                print("pathname: " + pathname)
-                image_file2 = open(pathname, "r")
-                list1 = image_file2.readlines()
-                list1_len = len(list1)
-                image_file2.close()
+            print("pathname: " + pathname)
+            image_file2 = open(pathname, "r")
+            list1 = image_file2.readlines()
+            list1_len = len(list1)
+            image_file2.close()
 
-                image_file2 = open(pathname, "r")
-                listfinal = image_file2.readlines()[2:list1_len]
-                image_file2.close()
-            else: 
+            image_file2 = open(pathname, "r")
+            listfinal = image_file2.readlines()[2:list1_len]
+            image_file2.close()
+            '''else: 
                 image_file = open(pathname, "r")
                 self.result_x_dir = image_file.readlines()[0]
                 self.result_x_dir = self.x_totalSize.replace("\n", "")
@@ -714,7 +741,7 @@ class windowCreateImgBlock(wx.Frame):
 
                 image_file2 = open(pathname, "r")
                 listfinal = image_file2.readlines()[4:list1_len]
-                image_file2.close()
+                image_file2.close()'''
 
             str1 : str = ""
             for x in listfinal:
