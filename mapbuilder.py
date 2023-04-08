@@ -413,25 +413,43 @@ class windowCreateImgBlock(wx.Frame):
 
         self.basicGUI()
         self.getDrawingModeDialog(self)
+
+        defaultMagnifySize : str = "0"
+        if(self.drawingMode == "Painting Mode"): #Check drawing mode and init variables.
+            defaultMagnifySize = "1"
+            self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
+            self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
+            self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_release)
+        else: #this is for matrix mode
+            defaultMagnifySize = "10"
+            self.matrixModePxSize : int = 10 #this is the default value of px size for matrix mode
+            self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clicMatrix)
+            self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_eventsMatrix)
+            self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_releaseMatrix)
+            
+        self.magnifyInput = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(30,30), value=defaultMagnifySize)
+        self.panel.addToBoxSizerVHbox(self.magnifyInput)
+        self.panel.setupScrolling()
+
         global destroyCreateBlockWindow
         if destroyCreateBlockWindow:
             #destroy window
             destroyCreateBlockWindow = False
             self.Destroy()
         else:
-            if(self.drawingMode == "Painting Mode"):
-                self.getDialog2(self)
-                if destroyCreateBlockWindow:
-                    #destroy window
-                    destroyCreateBlockWindow = False
-                    self.Destroy()
-            else:
+            #if(self.drawingMode == "Painting Mode"):
+            self.getDialog2(self)
+            if destroyCreateBlockWindow:
+                #destroy window
+                destroyCreateBlockWindow = False
+                self.Destroy()
+            '''else:
                 #self.getDialog(self)
                 self.getDialog2(self)
                 if destroyCreateBlockWindow:
                     #destroy window
                     destroyCreateBlockWindow = False
-                    self.Destroy()
+                    self.Destroy()'''
 
         
         
@@ -474,9 +492,9 @@ class windowCreateImgBlock(wx.Frame):
         self.Bind(wx.EVT_MENU, self.Quit, exitItem)
         
         
-        self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
-        self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
-        self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_release)
+        #self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
+        #self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
+        #self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_release)
 
         self.SetTitle('Create Image Block')
         
@@ -502,9 +520,9 @@ class windowCreateImgBlock(wx.Frame):
         self.panel.setAddToBoxSizerVbox(self.magnifyText)
         self.panel.setupScrolling()
         
-        self.magnifyInput = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(30,30), value="1")
-        self.panel.addToBoxSizerVHbox(self.magnifyInput)
-        self.panel.setupScrolling()
+        #self.magnifyInput = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(30,30), value="1")
+        #self.panel.addToBoxSizerVHbox(self.magnifyInput)
+        #self.panel.setupScrolling()
 
         self.changeMagnifyButton = wx.Button(self.panel, label="Change", pos=(0,0))#pos=(240,240))
         self.Bind(wx.EVT_BUTTON, self.onChangeMagnify, self.changeMagnifyButton)
@@ -540,8 +558,13 @@ class windowCreateImgBlock(wx.Frame):
             #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
             #self.log.AppendText("x-dir total size(px): "+ dlg.x_totalSize +"\n")
             #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
-            self.displayMap2(self)
-            dlg.Destroy()
+            if(self.drawingMode == "Painting Mode"):
+                self.displayMap2(self)
+                dlg.Destroy()
+            else:
+                self.displayMapForMatrix(self)
+                dlg.Destroy()
+            
         else:
             global destroyCreateBlockWindow
             destroyCreateBlockWindow = True
@@ -615,7 +638,42 @@ class windowCreateImgBlock(wx.Frame):
         self.staticbitmap.Refresh()
         self.staticbitmap.SetBitmap(self.bitmapForMap)
         self.staticbitmap.Refresh()
+
+    def displayMapForMatrix(self, e):
+        #self.xintervals = int((int(self.x_totalSize))/(int(self.result_x_dir)))
+        #self.yintervals = int((int(self.y_totalSize))/(int(self.result_y_dir)))
+
+        self.xintervals = int(self.x_totalSize)
+        self.yintervals = int(self.y_totalSize)
+
+        print(f"xintervals: {self.xintervals} and yintervals: {self.yintervals}")
+        self.map_2d_arr = [[0 for x in range(self.xintervals)] for y in range(self.yintervals)]
+        print(self.map_2d_arr)
+        #self.staticbitmap2 = wx.StaticBitmap(self, pos=(800, 800))#this function has position, it is for selected image displayed.
+        #self.staticbitmap2 = wx.StaticBitmap(self, pos=(10, 60))#this function has position, it is for selected image displayed.
         
+        pxSize : int = self.matrixModePxSize
+
+        initialWidth : int =  int(self.x_totalSize) * pxSize
+        initialHeight : int = int(self.y_totalSize) * pxSize
+
+        self.bitmapForMap = wx.Bitmap(width=initialWidth, height=initialHeight)
+        dc = wx.MemoryDC(self.bitmapForMap)
+        dc.SetBrush(wx.Brush('#E5CCFF'))
+        dc.DrawRectangle(0, 0, width=initialWidth, height=initialHeight)
+        for x in range(self.xintervals):
+            for y in range(self.yintervals):
+                 dc.DrawRectangle(x * pxSize, y * pxSize, width = pxSize, height = pxSize)
+        
+        self.staticbitmap.SetBitmap(self.bitmapForMap)
+
+        #self.panel.vbox.Detach(self.staticbitmap2)
+        self.panel.addToBoxSizerVbox(self.staticbitmap)
+        self.panel.setupScrolling()
+
+        self.staticbitmap.Refresh()
+        self.staticbitmap.SetBitmap(self.bitmapForMap)
+        self.staticbitmap.Refresh()
 
     def SaveFile(self, event):
         defaultpath = '.'
@@ -898,6 +956,77 @@ class windowCreateImgBlock(wx.Frame):
         global drawBool2
         drawBool2 = False
         print("herehere2\n")
+        self.staticbitmap.Refresh()
+        event.Skip()
+
+    def on_clicMatrix(self, event : wx.MouseEvent):
+        x, y = event.GetPosition()
+        print(f"hi x: {x} y: {y}\n")
+        pxSize : int = self.matrixModePxSize
+
+        self.xintervals = int(self.x_totalSize)
+        self.yintervals = int(self.y_totalSize)
+        for x2 in range(int(self.xintervals)):
+            for y2 in range(int(self.yintervals)):
+                if x in range(x2*pxSize, pxSize*(x2+1)):
+                    if y in range(y2*pxSize, pxSize*(y2+1)):
+                        print(f"here x2: {x2} and y2: {y2}")
+                        xVal = x2
+                        yVal = y2
+
+        dc = wx.MemoryDC(self.bitmapForMap)
+        #dc.SetPen(wx.Pen("white",style=wx.TRANSPARENT))
+        dc.SetBrush(wx.Brush(self.selectedColor))
+        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+        dc.DrawRectangle(x=(xVal*pxSize), y=(yVal*pxSize), width=pxSize, height=pxSize)
+        #dc.DrawBitmap(selectedImageFile, x=(xVal*int(self.result_x_dir)), y=(yVal*int(self.result_y_dir)))
+        self.staticbitmap.SetBitmap(self.bitmapForMap)
+        global drawBool
+        drawBool = True
+        event.Skip()
+
+
+    def mouse_eventsMatrix(self, event : wx.MouseEvent):
+        
+        #if drawBool == True:
+        '''val1 = event.LeftDown
+        val2 = event.LeftUp
+        if val1 == True:
+            print("leftDown\n")
+        elif val2 == True:
+            print("leftUp\n")
+        else:'''
+        if drawBool == True:
+            x, y = event.GetPosition()
+            print(f"hi x: {x} y: {y}\n")
+
+            self.xintervals = int(self.x_totalSize)
+            self.yintervals = int(self.y_totalSize)
+
+            pxSize : int = self.matrixModePxSize
+
+            for x2 in range(int(self.xintervals)):
+                for y2 in range(int(self.yintervals)):
+                    if x in range(x2*pxSize, pxSize*(x2+1)):
+                        if y in range(y2*pxSize, pxSize*(y2+1)):
+                            print(f"here x2: {x2} and y2: {y2}")
+                            xVal = x2
+                            yVal = y2
+
+            dc = wx.MemoryDC(self.bitmapForMap)
+        
+            dc.SetBrush(wx.Brush(self.selectedColor))
+            dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+            dc.DrawRectangle(x=(xVal*pxSize), y=(yVal*pxSize), width=pxSize, height=pxSize)
+            #dc.DrawBitmap(selectedImageFile, x=(xVal*int(self.result_x_dir)), y=(yVal*int(self.result_y_dir)))
+            self.staticbitmap.SetBitmap(self.bitmapForMap)
+
+        event.Skip()
+
+    def on_releaseMatrix(self, event : wx.MouseEvent):
+        global drawBool
+        drawBool = False
+        print("herehere\n")
         self.staticbitmap.Refresh()
         event.Skip()
 
