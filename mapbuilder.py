@@ -18,7 +18,7 @@ class windowClass(wx.Frame):
 
     def __init__(self, *args, **kwargs): #arguments and keyword arguments
         super(windowClass, self).__init__(*args, **kwargs)
-
+        self.SetClientSize(self.FromDIP(wx.Size(700, 700)))
         self.counter = 0
         self.counter2 = 0
         self.basicGUI()
@@ -77,7 +77,7 @@ class windowClass(wx.Frame):
 
         self.SetTitle('Simple Map Builder')
         
-        self.SetSize(wx.Size(1000, 1000))
+        #self.SetSize(wx.Size(1000, 1000))
         self.Centre()
 
         icon = wx.Icon('C:\\Users\\change\\source\\Python\\mapbuilder\\MB_ICON.ico', wx.BITMAP_TYPE_ANY)
@@ -396,6 +396,7 @@ class windowCreateImgBlock(wx.Frame):
 
     def __init__(self, *args, **kwargs): #arguments and keyword arguments
         super(windowCreateImgBlock, self).__init__(*args, **kwargs)
+        self.SetClientSize(self.FromDIP(wx.Size(700, 700)))
 
         defaultColor = wx.Colour()
         defaultColor.Set("#33FFCB")
@@ -498,7 +499,7 @@ class windowCreateImgBlock(wx.Frame):
 
         self.SetTitle('Create Image Block')
         
-        self.SetSize(wx.Size(1000, 1000))
+        #self.SetSize(wx.Size(1000, 1000))
         self.Centre()
 
         icon = wx.Icon('C:\\Users\\change\\source\\Python\\mapbuilder\\MB_ICON.ico', wx.BITMAP_TYPE_ANY)
@@ -690,6 +691,7 @@ class windowCreateImgBlock(wx.Frame):
         sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSize))
 
         wx.Bitmap.Rescale(savedImageBitmap, sizeNeeded)
+        #image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
 
         savedImage : wx.Image = savedImageBitmap.ConvertToImage()
         
@@ -855,6 +857,9 @@ class windowCreateImgBlock(wx.Frame):
         self.staticbitmap.SetBitmap(tempBitmap2)
         self.bitmapForMap = tempBitmap2
         self.staticbitmap.Refresh()
+
+        if self.drawingMode == "Matrix Mode":
+            self.matrixModePxSize = int(self.magnifyInput.GetValue())
 
 
     # Some function for redrawing using the given colour. Ideally, it
