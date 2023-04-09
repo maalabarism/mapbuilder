@@ -5,7 +5,7 @@ import base64
 from io import BytesIO
 import os
 import time
-
+#
 #global variables:
 isConfigSet = False
 isConfigSet2 = False
