@@ -5,7 +5,7 @@ import base64
 from io import BytesIO
 import os
 import time
-#
+
 #global variables:
 isConfigSet = False
 isConfigSet2 = False
@@ -18,7 +18,7 @@ class windowClass(wx.Frame):
 
     def __init__(self, *args, **kwargs): #arguments and keyword arguments
         super(windowClass, self).__init__(*args, **kwargs)
-        self.SetClientSize(self.FromDIP(wx.Size(700, 700)))
+
         self.counter = 0
         self.counter2 = 0
         self.basicGUI()
@@ -77,7 +77,7 @@ class windowClass(wx.Frame):
 
         self.SetTitle('Simple Map Builder')
         
-        #self.SetSize(wx.Size(1000, 1000))
+        self.SetSize(wx.Size(1000, 1000))
         self.Centre()
 
         icon = wx.Icon('C:\\Users\\change\\source\\Python\\mapbuilder\\MB_ICON.ico', wx.BITMAP_TYPE_ANY)
@@ -396,7 +396,6 @@ class windowCreateImgBlock(wx.Frame):
 
     def __init__(self, *args, **kwargs): #arguments and keyword arguments
         super(windowCreateImgBlock, self).__init__(*args, **kwargs)
-        self.SetClientSize(self.FromDIP(wx.Size(700, 700)))
 
         defaultColor = wx.Colour()
         defaultColor.Set("#33FFCB")
@@ -422,8 +421,8 @@ class windowCreateImgBlock(wx.Frame):
             self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
             self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_release)
         else: #this is for matrix mode
-            defaultMagnifySize = "10"
-            self.matrixModePxSize : int = 10 #this is the default value of px size for matrix mode
+            defaultMagnifySize = "1"
+            self.matrixModePxSize : int = 1 #this is the default value of px size for matrix mode
             self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clicMatrix)
             self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_eventsMatrix)
             self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_releaseMatrix)
@@ -499,7 +498,7 @@ class windowCreateImgBlock(wx.Frame):
 
         self.SetTitle('Create Image Block')
         
-        #self.SetSize(wx.Size(1000, 1000))
+        self.SetSize(wx.Size(1000, 1000))
         self.Centre()
 
         icon = wx.Icon('C:\\Users\\change\\source\\Python\\mapbuilder\\MB_ICON.ico', wx.BITMAP_TYPE_ANY)
@@ -966,26 +965,36 @@ class windowCreateImgBlock(wx.Frame):
 
     def on_clicMatrix(self, event : wx.MouseEvent):
         x, y = event.GetPosition()
+        
+        dc = wx.MemoryDC(self.bitmapForMap)
+
         print(f"hi x: {x} y: {y}\n")
         pxSize : int = self.matrixModePxSize
 
-        self.xintervals = int(self.x_totalSize)
-        self.yintervals = int(self.y_totalSize)
-        for x2 in range(int(self.xintervals)):
-            for y2 in range(int(self.yintervals)):
-                if x in range(x2*pxSize, pxSize*(x2+1)):
-                    if y in range(y2*pxSize, pxSize*(y2+1)):
-                        print(f"here x2: {x2} and y2: {y2}")
-                        xVal = x2
-                        yVal = y2
+        if pxSize == 1:
+            dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+            point = wx.Point(x, y)
+            dc.DrawPoint(point)
+        else:
+            self.xintervals = int(self.x_totalSize)
+            self.yintervals = int(self.y_totalSize)
+            for x2 in range(int(self.xintervals)):
+                for y2 in range(int(self.yintervals)):
+                    if x in range(x2*pxSize, pxSize*(x2+1)):
+                        if y in range(y2*pxSize, pxSize*(y2+1)):
+                            print(f"here x2: {x2} and y2: {y2}\n")
+                            print(f"here x: {x} and y: {y}\n")
+                            xVal = x2
+                            yVal = y2
 
-        dc = wx.MemoryDC(self.bitmapForMap)
-        #dc.SetPen(wx.Pen("white",style=wx.TRANSPARENT))
-        dc.SetBrush(wx.Brush(self.selectedColor))
-        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
-        dc.DrawRectangle(x=(xVal*pxSize), y=(yVal*pxSize), width=pxSize, height=pxSize)
-        #dc.DrawBitmap(selectedImageFile, x=(xVal*int(self.result_x_dir)), y=(yVal*int(self.result_y_dir)))
-        self.staticbitmap.SetBitmap(self.bitmapForMap)
+            #dc = wx.MemoryDC(self.bitmapForMap)
+            #dc.SetPen(wx.Pen("white",style=wx.TRANSPARENT))
+            dc.SetBrush(wx.Brush(self.selectedColor))
+            dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+            dc.DrawRectangle(x=(xVal*pxSize), y=(yVal*pxSize), width=pxSize, height=pxSize)
+            #dc.DrawBitmap(selectedImageFile, x=(xVal*int(self.result_x_dir)), y=(yVal*int(self.result_y_dir)))
+            
+        self.staticbitmap.SetBitmap(self.bitmapForMap)    
         global drawBool
         drawBool = True
         event.Skip()
@@ -1010,22 +1019,27 @@ class windowCreateImgBlock(wx.Frame):
 
             pxSize : int = self.matrixModePxSize
 
-            for x2 in range(int(self.xintervals)):
-                for y2 in range(int(self.yintervals)):
-                    if x in range(x2*pxSize, pxSize*(x2+1)):
-                        if y in range(y2*pxSize, pxSize*(y2+1)):
-                            print(f"here x2: {x2} and y2: {y2}")
-                            xVal = x2
-                            yVal = y2
-
             dc = wx.MemoryDC(self.bitmapForMap)
-        
-            dc.SetBrush(wx.Brush(self.selectedColor))
-            dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
-            dc.DrawRectangle(x=(xVal*pxSize), y=(yVal*pxSize), width=pxSize, height=pxSize)
-            #dc.DrawBitmap(selectedImageFile, x=(xVal*int(self.result_x_dir)), y=(yVal*int(self.result_y_dir)))
-            self.staticbitmap.SetBitmap(self.bitmapForMap)
 
+            if pxSize == 1:
+                dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                point = wx.Point(x, y)
+                dc.DrawPoint(point)
+            else:
+                for x2 in range(int(self.xintervals)):
+                    for y2 in range(int(self.yintervals)):
+                        if x in range(x2*pxSize, pxSize*(x2+1)):
+                            if y in range(y2*pxSize, pxSize*(y2+1)):
+                                print(f"here x2: {x2} and y2: {y2}")
+                                xVal = x2
+                                yVal = y2
+
+                #dc = wx.MemoryDC(self.bitmapForMap)
+                dc.SetBrush(wx.Brush(self.selectedColor))
+                dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                dc.DrawRectangle(x=(xVal*pxSize), y=(yVal*pxSize), width=pxSize, height=pxSize)
+                #dc.DrawBitmap(selectedImageFile, x=(xVal*int(self.result_x_dir)), y=(yVal*int(self.result_y_dir)))
+            self.staticbitmap.SetBitmap(self.bitmapForMap)
         event.Skip()
 
     def on_releaseMatrix(self, event : wx.MouseEvent):
