@@ -268,9 +268,6 @@ class windowClass(wx.Frame):
                 self.result_y_dir = dlg.result_y_dir
                 self.x_totalSize = dlg.x_totalSize
                 self.y_totalSize = dlg.y_totalSize
-                #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
-                #self.log.AppendText("x-dir total size(px): "+ dlg.x_totalSize +"\n")
-                #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
             else:
                self.log1.AppendText("No input found\n") 
         else:
@@ -287,8 +284,7 @@ class windowClass(wx.Frame):
         print(f"xintervals: {self.xintervals} and yintervals: {self.yintervals}")
         self.map_2d_arr = [[0 for x in range(self.xintervals)] for y in range(self.yintervals)]
         print(self.map_2d_arr)
-        #self.staticbitmap2 = wx.StaticBitmap(self, pos=(800, 800))#this function has position, it is for selected image displayed.
-        #self.staticbitmap2 = wx.StaticBitmap(self, pos=(10, 60))#this function has position, it is for selected image displayed.
+        
         self.bitmapForMap = wx.Bitmap(width=int(self.x_totalSize), height=int(self.y_totalSize))
         dc = wx.MemoryDC(self.bitmapForMap)
         dc.SetBrush(wx.Brush('#E5CCFF'))
@@ -342,15 +338,6 @@ class windowClass(wx.Frame):
 
 
     def mouse_events(self, event : wx.MouseEvent):
-        
-        #if drawBool == True:
-        '''val1 = event.LeftDown
-        val2 = event.LeftUp
-        if val1 == True:
-            print("leftDown\n")
-        elif val2 == True:
-            print("leftUp\n")
-        else:'''
         if drawBool == True:
             x, y = event.GetPosition()
             print(f"hi x: {x} y: {y}\n")
@@ -382,7 +369,6 @@ class windowClass(wx.Frame):
         print("herehere\n")
         self.staticbitmap2.Refresh()
         event.Skip()
-
 
     def ShowHelp(self, e):
         dlg = ShowHelpDialog(parent = self.panel)
@@ -418,15 +404,10 @@ class windowCreateImgBlock(wx.Frame):
         self.getDrawingModeDialog(self)
 
         if(self.drawingMode == "Painting Mode"): #Check drawing mode and init variables.
-            #defaultMagnifySize = "1"
-            #defaultMagnifySize2 = "1\n1"
             self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
             self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
             self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_release)
         else: #this is for matrix mode
-            #defaultMagnifySize = "1"
-            #defaultMagnifySize2 = "1\n1"
-            #self.matrixModePxSize : int = 1 #this is the default value of px size for matrix mode
             self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clicMatrix)
             self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_eventsMatrix)
             self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_releaseMatrix)
@@ -439,8 +420,6 @@ class windowCreateImgBlock(wx.Frame):
         self.panel.setupScrolling()
 
         ##############ADDING TWO BUTTONS WITH BITMAP IMGS inside a vertical boxsizer, then added to self.panel specified box sizer.###########
-        #bmp1 = 
-        #bmp2 = 
         self.bmpButton1 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap('./buttonup.png'), pos=(0, 0), size=(32, 16))
         self.bmpButton2 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap('./buttonup2.png'), pos=(0, 0), size=(32, 16))
         self.Bind(wx.EVT_BUTTON, self.bmpButton1Func, self.bmpButton1)
@@ -511,11 +490,6 @@ class windowCreateImgBlock(wx.Frame):
         self.Bind(wx.EVT_MENU, self.SaveProject, saveBlockProject)
         self.Bind(wx.EVT_MENU, self.OpenProject, openBlockProject)
         self.Bind(wx.EVT_MENU, self.Quit, exitItem)
-        
-        
-        #self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
-        #self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
-        #self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_release)
 
         self.SetTitle('Create Image Block')
         
@@ -541,9 +515,6 @@ class windowCreateImgBlock(wx.Frame):
         self.panel.setAddToBoxSizerVbox(self.magnifyText)
         self.panel.setupScrolling()
         
-        #self.magnifyInput = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(30,30), value="1")
-        #self.panel.addToBoxSizerVHbox(self.magnifyInput)
-        #self.panel.setupScrolling()
 
         self.changeMagnifyButton = wx.Button(self.panel, label="Change", pos=(0,0))#pos=(240,240))
         self.Bind(wx.EVT_BUTTON, self.onChangeMagnify, self.changeMagnifyButton)
@@ -564,9 +535,6 @@ class windowCreateImgBlock(wx.Frame):
                 self.log1.AppendText("hereherehere\n")
                 self.drawingMode = dlg.drawingMode # 2 options: drawing mode or matrix mode.
                 print(self.drawingMode)
-                #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
-                #self.log.AppendText("x-dir total size(px): "+ dlg.x_totalSize +"\n")
-                #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
             else:
                self.log1.AppendText("No input found\n") 
     def getDialog2(self, e):
@@ -576,9 +544,7 @@ class windowCreateImgBlock(wx.Frame):
             self.log1.AppendText(" x-dir total size(px): " + dlg.x_totalSize + " y-dir total size(px): " + dlg.y_totalSize + "\n")
             self.x_totalSize = dlg.x_totalSize
             self.y_totalSize = dlg.y_totalSize
-            #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
-            #self.log.AppendText("x-dir total size(px): "+ dlg.x_totalSize +"\n")
-            #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
+
             if(self.drawingMode == "Painting Mode"):
                 self.displayMap2(self)
                 dlg.Destroy()
@@ -589,34 +555,6 @@ class windowCreateImgBlock(wx.Frame):
         else:
             global destroyCreateBlockWindow
             destroyCreateBlockWindow = True
-        '''if dlg.isDataThere:
-            self.displayMap(self)
-            dlg.Destroy()'''
-        #self.log2 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(0, 60), size=(int(dlg.x_totalSize), int(dlg.y_totalSize)), style = wx.TE_MULTILINE | wx.VSCROLL)
-        #dlg.Destroy()
-
-    def getDialog(self, e):
-        dlg = GetData(parent = self.panel)
-        dlg.ShowModal()
-        if dlg.isDataThere == True:
-            self.log1.AppendText("x-dir(px): "+ dlg.result_x_dir + " y-dir(px): "+ dlg.result_y_dir +" x-dir total size(px): " 
-            + dlg.x_totalSize + " y-dir total size(px): " + dlg.y_totalSize + "\n")
-            self.result_x_dir = dlg.result_x_dir
-            self.result_y_dir = dlg.result_y_dir
-            self.x_totalSize = dlg.x_totalSize
-            self.y_totalSize = dlg.y_totalSize
-            #self.log.AppendText("y-dir (px): "+ dlg.result_y_dir +"\n")
-            #self.log.AppendText("x-dir total size(px): "+ dlg.x_totalSize +"\n")
-            #self.log.AppendText("y-dir total size(px): "+ dlg.y_totalSize +"\n")
-            self.displayMap(self)
-            dlg.Destroy()
-        else:
-            global destroyCreateBlockWindow
-            destroyCreateBlockWindow = True
-        '''if dlg.isDataThere:
-            self.displayMap(self)
-            dlg.Destroy()'''
-        #self.log2 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(0, 60), size=(int(dlg.x_totalSize), int(dlg.y_totalSize)), style = wx.TE_MULTILINE | wx.VSCROLL)
 
     def displayMap2(self, e): #This is for Painting Mode
         self.bitmapForMap = wx.Bitmap(width=int(self.x_totalSize), height=int(self.y_totalSize))
@@ -626,33 +564,6 @@ class windowCreateImgBlock(wx.Frame):
 
         self.staticbitmap.SetBitmap(self.bitmapForMap)
 
-        #self.panel.vbox.Detach(self.staticbitmap2)
-        self.panel.addToBoxSizerVbox(self.staticbitmap)
-        self.panel.setupScrolling()
-
-        self.staticbitmap.Refresh()
-        self.staticbitmap.SetBitmap(self.bitmapForMap)
-        self.staticbitmap.Refresh()
-
-    def displayMap(self, e): 
-        self.xintervals = int((int(self.x_totalSize))/(int(self.result_x_dir)))
-        self.yintervals = int((int(self.y_totalSize))/(int(self.result_y_dir)))
-        print(f"xintervals: {self.xintervals} and yintervals: {self.yintervals}")
-        self.map_2d_arr = [[0 for x in range(self.xintervals)] for y in range(self.yintervals)]
-        print(self.map_2d_arr)
-        #self.staticbitmap2 = wx.StaticBitmap(self, pos=(800, 800))#this function has position, it is for selected image displayed.
-        #self.staticbitmap2 = wx.StaticBitmap(self, pos=(10, 60))#this function has position, it is for selected image displayed.
-        self.bitmapForMap = wx.Bitmap(width=int(self.x_totalSize), height=int(self.y_totalSize))
-        dc = wx.MemoryDC(self.bitmapForMap)
-        dc.SetBrush(wx.Brush('#E5CCFF'))
-        dc.DrawRectangle(0, 0, width=int(self.x_totalSize), height=int(self.y_totalSize))
-        for x in range(self.xintervals):
-            for y in range(self.yintervals):
-                 dc.DrawRectangle((x*(int(self.result_x_dir))), (y*(int(self.result_y_dir))), width=int(self.result_x_dir), height=int(self.result_y_dir))
-        
-        self.staticbitmap.SetBitmap(self.bitmapForMap)
-
-        #self.panel.vbox.Detach(self.staticbitmap2)
         self.panel.addToBoxSizerVbox(self.staticbitmap)
         self.panel.setupScrolling()
 
@@ -661,8 +572,6 @@ class windowCreateImgBlock(wx.Frame):
         self.staticbitmap.Refresh()
 
     def displayMapForMatrix(self, e):
-        #self.xintervals = int((int(self.x_totalSize))/(int(self.result_x_dir)))
-        #self.yintervals = int((int(self.y_totalSize))/(int(self.result_y_dir)))
 
         self.xintervals = int(self.x_totalSize)
         self.yintervals = int(self.y_totalSize)
@@ -670,8 +579,6 @@ class windowCreateImgBlock(wx.Frame):
         print(f"xintervals: {self.xintervals} and yintervals: {self.yintervals}")
         self.map_2d_arr = [[0 for x in range(self.xintervals)] for y in range(self.yintervals)]
         print(self.map_2d_arr)
-        #self.staticbitmap2 = wx.StaticBitmap(self, pos=(800, 800))#this function has position, it is for selected image displayed.
-        #self.staticbitmap2 = wx.StaticBitmap(self, pos=(10, 60))#this function has position, it is for selected image displayed.
         
         pxSize : int = int(self.magnifyVal)
         if pxSize == 0:
@@ -741,7 +648,6 @@ class windowCreateImgBlock(wx.Frame):
         with open(pathname, "rb") as image_file:
             data = base64.b64encode(image_file.read())
 
-        #if self.drawingMode == "Painting Mode":
         f = open(pathname, "w")
         str1 = str(self.x_totalSize) + "\n"
         str2 = str(self.y_totalSize) + "\n"
@@ -749,18 +655,6 @@ class windowCreateImgBlock(wx.Frame):
         f.write(str2)
         datastr = data.decode("utf-8")
         f.write(datastr)
-        '''else:
-            f = open(pathname, "w")
-            str1 = str(self.result_x_dir) + "\n"
-            str2 = str(self.result_y_dir) + "\n"
-            str3 = str(self.x_totalSize) + "\n"
-            str4 = str(self.y_totalSize) + "\n"
-            f.write(str1)
-            f.write(str2)
-            f.write(str3)
-            f.write(str4)
-            datastr = data.decode("utf-8")
-            f.write(datastr)'''
         
         openFileDialog.Destroy()
 
@@ -794,36 +688,6 @@ class windowCreateImgBlock(wx.Frame):
             image_file2 = open(pathname, "r")
             listfinal = image_file2.readlines()[2:list1_len]
             image_file2.close()
-            '''else: 
-                image_file = open(pathname, "r")
-                self.result_x_dir = image_file.readlines()[0]
-                self.result_x_dir = self.x_totalSize.replace("\n", "")
-                image_file.close()
-
-                image_file = open(pathname, "r")
-                self.result_y_dir = image_file.readlines()[1]
-                self.result_y_dir = self.y_totalSize.replace("\n", "")
-                image_file.close()
-                
-                image_file = open(pathname, "r")
-                self.x_totalSize = image_file.readlines()[2]
-                self.x_totalSize = self.x_totalSize.replace("\n", "")
-                image_file.close()
-
-                image_file = open(pathname, "r")
-                self.y_totalSize = image_file.readlines()[3]
-                self.y_totalSize = self.y_totalSize.replace("\n", "")
-                image_file.close()
-
-                print("pathname: " + pathname)
-                image_file2 = open(pathname, "r")
-                list1 = image_file2.readlines()
-                list1_len = len(list1)
-                image_file2.close()
-
-                image_file2 = open(pathname, "r")
-                listfinal = image_file2.readlines()[4:list1_len]
-                image_file2.close()'''
 
             str1 : str = ""
             for x in listfinal:
@@ -880,7 +744,6 @@ class windowCreateImgBlock(wx.Frame):
         self.staticbitmap.SetBitmap(tempBitmap2)
         self.bitmapForMap = tempBitmap2
         self.staticbitmap.Refresh()
-
         #if self.drawingMode == "Matrix Mode":
             #self.matrixModePxSize = int(self.magnifyInput.GetValue())
 
@@ -1013,12 +876,9 @@ class windowCreateImgBlock(wx.Frame):
                             xVal = x2
                             yVal = y2
 
-            #dc = wx.MemoryDC(self.bitmapForMap)
-            #dc.SetPen(wx.Pen("white",style=wx.TRANSPARENT))
             dc.SetBrush(wx.Brush(self.selectedColor))
             dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
             dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
-            #dc.DrawBitmap(selectedImageFile, x=(xVal*int(self.result_x_dir)), y=(yVal*int(self.result_y_dir)))
             
         self.staticbitmap.SetBitmap(self.bitmapForMap)    
         global drawBool
@@ -1027,15 +887,6 @@ class windowCreateImgBlock(wx.Frame):
 
 
     def mouse_eventsMatrix(self, event : wx.MouseEvent):
-        
-        #if drawBool == True:
-        '''val1 = event.LeftDown
-        val2 = event.LeftUp
-        if val1 == True:
-            print("leftDown\n")
-        elif val2 == True:
-            print("leftUp\n")
-        else:'''
         if drawBool == True:
             x, y = event.GetPosition()
             print(f"hi x: {x} y: {y}\n")
@@ -1062,11 +913,9 @@ class windowCreateImgBlock(wx.Frame):
                                 xVal = x2
                                 yVal = y2
 
-                #dc = wx.MemoryDC(self.bitmapForMap)
                 dc.SetBrush(wx.Brush(self.selectedColor))
                 dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
                 dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
-                #dc.DrawBitmap(selectedImageFile, x=(xVal*int(self.result_x_dir)), y=(yVal*int(self.result_y_dir)))
             self.staticbitmap.SetBitmap(self.bitmapForMap)
         event.Skip()
 
@@ -1098,7 +947,6 @@ class windowCreateImgBlock(wx.Frame):
         
         print(self.magnifyVal)
         print(self.realMagnifyVal)
-        #self.matrixModePxSize = self.matrixModePxSize * 2
 
     def bmpButton2Func(self, event : wx.EVT_BUTTON):#this is for magnify down
         print("here2")
@@ -1111,9 +959,6 @@ class windowCreateImgBlock(wx.Frame):
 
         print(self.magnifyVal)
         print(self.realMagnifyVal)
-        #if self.magnifyText != "1":
-            #self.matrixModePxSize = self.matrixModePxSize / 2
-        
         
 
     def Quit(self, e):
