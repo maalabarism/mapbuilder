@@ -401,8 +401,9 @@ class windowCreateImgBlock(wx.Frame):
         defaultColor = wx.Colour()
         defaultColor.Set("#33FFCB")
 
-        self.magnifyVal : int = 1
-        self.magnifyValStr : str ="1"
+        self.magnifyVal : int = 0 
+        self.realMagnifyVal : int = 1
+        self.magnifyValStr : str ="0" #magnifyVal str is 0 when strVal is 1
 
         self.selectedColor : wx.Colour = defaultColor
         self.tempColor : wx.Colour = defaultColor
@@ -633,7 +634,7 @@ class windowCreateImgBlock(wx.Frame):
         self.staticbitmap.SetBitmap(self.bitmapForMap)
         self.staticbitmap.Refresh()
 
-    def displayMap(self, e): #This is for matrix mode
+    def displayMap(self, e): 
         self.xintervals = int((int(self.x_totalSize))/(int(self.result_x_dir)))
         self.yintervals = int((int(self.y_totalSize))/(int(self.result_y_dir)))
         print(f"xintervals: {self.xintervals} and yintervals: {self.yintervals}")
@@ -673,6 +674,8 @@ class windowCreateImgBlock(wx.Frame):
         #self.staticbitmap2 = wx.StaticBitmap(self, pos=(10, 60))#this function has position, it is for selected image displayed.
         
         pxSize : int = int(self.magnifyVal)
+        if pxSize == 0:
+            pxSize += 1
 
         initialWidth : int =  int(self.x_totalSize) * pxSize
         initialHeight : int = int(self.y_totalSize) * pxSize
@@ -862,14 +865,15 @@ class windowCreateImgBlock(wx.Frame):
                 self.panel.setupScrolling()
 
     def onChangeMagnify(self, event : wx.EVT_BUTTON):
-        self.magnifyVal = self.magnifyInput.GetValue()
+        #self.magnifyVal = self.magnifyInput.GetValue()
         print(self.magnifyVal)
+
 
         tempBitmap2 : wx.Bitmap = self.staticbitmap.GetBitmap()
 
-        str1 = "val1: " + str(int(self.magnifyVal) * int(self.x_totalSize)) + " val2: " + str(int(self.magnifyVal) * int(self.y_totalSize))
+        str1 = "val1: " + str(self.realMagnifyVal * int(self.x_totalSize)) + " val2: " + str(self.realMagnifyVal * int(self.y_totalSize))
         print(str1)
-        sizeNeeded : wx.Size = wx.Size(int(self.magnifyVal) * int(self.x_totalSize), int(self.magnifyVal) * int(self.y_totalSize))
+        sizeNeeded : wx.Size = wx.Size(self.realMagnifyVal * int(self.x_totalSize), self.realMagnifyVal * int(self.y_totalSize))
 
         wx.Bitmap.Rescale(tempBitmap2, sizeNeeded)
 
@@ -926,10 +930,10 @@ class windowCreateImgBlock(wx.Frame):
         print(f"hi2 x: {x} y: {y}\n")
         
         dc = wx.MemoryDC(self.bitmapForMap)
-        if(int(self.magnifyVal) > 1):
+        if(self.magnifyVal > 0):
         #For when self.MagnifyVal > 1, then need to draw a rectangle which would be the same as a point for a rescaled bitmap.
-            width2 = int(self.magnifyVal)
-            height2 = int(self.magnifyVal)
+            width2 = self.realMagnifyVal
+            height2 = self.realMagnifyVal
             #dc.SetBrush(wx.Brush('#FFFFFF'))
             dc.SetBrush(wx.Brush(self.selectedColor))
             dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
@@ -957,10 +961,10 @@ class windowCreateImgBlock(wx.Frame):
             print(f"hi2 x: {x} y: {y}\n")
             
             dc = wx.MemoryDC(self.bitmapForMap)
-            if(int(self.magnifyVal) > 1):
+            if(self.magnifyVal > 0):
             #For when self.MagnifyVal > 1, then need to draw a rectangle which would be the same as a point for a rescaled bitmap.
-                width2 = int(self.magnifyVal)
-                height2 = int(self.magnifyVal)
+                width2 = self.realMagnifyVal
+                height2 = self.realMagnifyVal
                 #dc.SetBrush(wx.Brush('#FFFFFF'))
                 dc.SetBrush(wx.Brush(self.selectedColor))
                 dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
@@ -990,9 +994,10 @@ class windowCreateImgBlock(wx.Frame):
 
         print(f"hi x: {x} y: {y}\n")
         #pxSize : int = self.matrixModePxSize
-        pxSize : int = int(self.magnifyVal)
+        pxSize : int = self.magnifyVal
+        pxSize2 : int = self.realMagnifyVal
 
-        if pxSize == 1:
+        if pxSize == 0:
             dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
             point = wx.Point(x, y)
             dc.DrawPoint(point)
@@ -1001,8 +1006,8 @@ class windowCreateImgBlock(wx.Frame):
             self.yintervals = int(self.y_totalSize)
             for x2 in range(int(self.xintervals)):
                 for y2 in range(int(self.yintervals)):
-                    if x in range(x2*pxSize, pxSize*(x2+1)):
-                        if y in range(y2*pxSize, pxSize*(y2+1)):
+                    if x in range(x2*pxSize2, pxSize2*(x2+1)):
+                        if y in range(y2*pxSize2, pxSize2*(y2+1)):
                             print(f"here x2: {x2} and y2: {y2}\n")
                             print(f"here x: {x} and y: {y}\n")
                             xVal = x2
@@ -1012,7 +1017,7 @@ class windowCreateImgBlock(wx.Frame):
             #dc.SetPen(wx.Pen("white",style=wx.TRANSPARENT))
             dc.SetBrush(wx.Brush(self.selectedColor))
             dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
-            dc.DrawRectangle(x=(xVal*pxSize), y=(yVal*pxSize), width=pxSize, height=pxSize)
+            dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
             #dc.DrawBitmap(selectedImageFile, x=(xVal*int(self.result_x_dir)), y=(yVal*int(self.result_y_dir)))
             
         self.staticbitmap.SetBitmap(self.bitmapForMap)    
@@ -1038,20 +1043,21 @@ class windowCreateImgBlock(wx.Frame):
             self.xintervals = int(self.x_totalSize)
             self.yintervals = int(self.y_totalSize)
 
-            pxSize : int = int(self.magnifyVal)
+            pxSize : int = self.magnifyVal
+            pxSize2 : int = self.realMagnifyVal
             #pxSize : int = self.matrixModePxSize
 
             dc = wx.MemoryDC(self.bitmapForMap)
 
-            if pxSize == 1:
+            if pxSize == 0:
                 dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
                 point = wx.Point(x, y)
                 dc.DrawPoint(point)
             else:
                 for x2 in range(int(self.xintervals)):
                     for y2 in range(int(self.yintervals)):
-                        if x in range(x2*pxSize, pxSize*(x2+1)):
-                            if y in range(y2*pxSize, pxSize*(y2+1)):
+                        if x in range(x2*pxSize2, pxSize2*(x2+1)):
+                            if y in range(y2*pxSize2, pxSize2*(y2+1)):
                                 print(f"here x2: {x2} and y2: {y2}")
                                 xVal = x2
                                 yVal = y2
@@ -1059,7 +1065,7 @@ class windowCreateImgBlock(wx.Frame):
                 #dc = wx.MemoryDC(self.bitmapForMap)
                 dc.SetBrush(wx.Brush(self.selectedColor))
                 dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
-                dc.DrawRectangle(x=(xVal*pxSize), y=(yVal*pxSize), width=pxSize, height=pxSize)
+                dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
                 #dc.DrawBitmap(selectedImageFile, x=(xVal*int(self.result_x_dir)), y=(yVal*int(self.result_y_dir)))
             self.staticbitmap.SetBitmap(self.bitmapForMap)
         event.Skip()
@@ -1084,27 +1090,27 @@ class windowCreateImgBlock(wx.Frame):
     
     def bmpButton1Func(self, event : wx.EVT_BUTTON):#this is for magnify up
         print("here1")
-        self.magnifyVal = self.magnifyInput.GetValue()
-        intValue = int(self.magnifyVal) + 1
-        intValue2 = 2 ** int(self.magnifyVal)
+        
+        self.magnifyVal += 1
+        self.realMagnifyVal = 2 ** self.magnifyVal
         self.magnifyInput.Clear()
-        self.magnifyInput.AppendText(str(intValue))
+        self.magnifyInput.AppendText(str(self.magnifyVal))
         
         print(self.magnifyVal)
-        print(str(intValue2))
+        print(self.realMagnifyVal)
         #self.matrixModePxSize = self.matrixModePxSize * 2
 
     def bmpButton2Func(self, event : wx.EVT_BUTTON):#this is for magnify down
         print("here2")
-        self.magnifyVal = self.magnifyInput.GetValue()
-        if self.magnifyVal != "1":
-            intValue = int(self.magnifyVal) - 1
-            intValue2 = (2 ** intValue)
+        
+        if self.magnifyVal > 0:
+            self.magnifyVal -= 1
+            self.realMagnifyVal = 2 ** self.magnifyVal
             self.magnifyInput.Clear()
-            self.magnifyInput.AppendText(str(intValue))
+            self.magnifyInput.AppendText(str(self.magnifyVal))
 
         print(self.magnifyVal)
-        print(str(intValue2))
+        print(self.realMagnifyVal)
         #if self.magnifyText != "1":
             #self.matrixModePxSize = self.matrixModePxSize / 2
         
