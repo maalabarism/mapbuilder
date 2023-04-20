@@ -1,6 +1,7 @@
 
 import wx
 import wx.lib.scrolledpanel as scrolled
+#import wx.lib.inspection
 import base64
 from io import BytesIO
 import os
@@ -400,7 +401,8 @@ class windowCreateImgBlock(wx.Frame):
         defaultColor = wx.Colour()
         defaultColor.Set("#33FFCB")
 
-        self.magnifyVal = 1
+        self.magnifyVal : int = 1
+        self.magnifyValStr : str ="1"
 
         self.selectedColor : wx.Colour = defaultColor
         self.tempColor : wx.Colour = defaultColor
@@ -414,22 +416,40 @@ class windowCreateImgBlock(wx.Frame):
         self.basicGUI()
         self.getDrawingModeDialog(self)
 
-        defaultMagnifySize : str = "0"
         if(self.drawingMode == "Painting Mode"): #Check drawing mode and init variables.
-            defaultMagnifySize = "1"
+            #defaultMagnifySize = "1"
+            #defaultMagnifySize2 = "1\n1"
             self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
             self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
             self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_release)
         else: #this is for matrix mode
-            defaultMagnifySize = "1"
-            self.matrixModePxSize : int = 1 #this is the default value of px size for matrix mode
+            #defaultMagnifySize = "1"
+            #defaultMagnifySize2 = "1\n1"
+            #self.matrixModePxSize : int = 1 #this is the default value of px size for matrix mode
             self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clicMatrix)
             self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_eventsMatrix)
             self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_releaseMatrix)
             
-        self.magnifyInput = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(30,30), value=defaultMagnifySize)
+        self.magnifyInput = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(30,30), value=self.magnifyValStr)
+        #self.magnifyInput2 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(50,30), value=defaultMagnifySize2, style = wx.TE_MULTILINE | wx.TE_READONLY)
+
         self.panel.addToBoxSizerVHbox(self.magnifyInput)
+        #self.panel.addToBoxSizerVHbox(self.magnifyInput2)
         self.panel.setupScrolling()
+
+        ##############ADDING TWO BUTTONS WITH BITMAP IMGS inside a vertical boxsizer, then added to self.panel specified box sizer.###########
+        #bmp1 = 
+        #bmp2 = 
+        self.bmpButton1 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap('./buttonup.png'), pos=(0, 0), size=(32, 16))
+        self.bmpButton2 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap('./buttonup2.png'), pos=(0, 0), size=(32, 16))
+        self.Bind(wx.EVT_BUTTON, self.bmpButton1Func, self.bmpButton1)
+        self.Bind(wx.EVT_BUTTON, self.bmpButton2Func, self.bmpButton2)
+        self.boxSizer = wx.BoxSizer(wx.VERTICAL)
+        self.boxSizer.Add(self.bmpButton1)
+        self.boxSizer.Add(self.bmpButton2)
+        self.panel.addToBoxSizerVHbox(self.boxSizer)
+        self.panel.setupScrolling()
+        ############################################################
 
         global destroyCreateBlockWindow
         if destroyCreateBlockWindow:
@@ -652,7 +672,7 @@ class windowCreateImgBlock(wx.Frame):
         #self.staticbitmap2 = wx.StaticBitmap(self, pos=(800, 800))#this function has position, it is for selected image displayed.
         #self.staticbitmap2 = wx.StaticBitmap(self, pos=(10, 60))#this function has position, it is for selected image displayed.
         
-        pxSize : int = self.matrixModePxSize
+        pxSize : int = int(self.magnifyVal)
 
         initialWidth : int =  int(self.x_totalSize) * pxSize
         initialHeight : int = int(self.y_totalSize) * pxSize
@@ -857,8 +877,8 @@ class windowCreateImgBlock(wx.Frame):
         self.bitmapForMap = tempBitmap2
         self.staticbitmap.Refresh()
 
-        if self.drawingMode == "Matrix Mode":
-            self.matrixModePxSize = int(self.magnifyInput.GetValue())
+        #if self.drawingMode == "Matrix Mode":
+            #self.matrixModePxSize = int(self.magnifyInput.GetValue())
 
 
     # Some function for redrawing using the given colour. Ideally, it
@@ -969,7 +989,8 @@ class windowCreateImgBlock(wx.Frame):
         dc = wx.MemoryDC(self.bitmapForMap)
 
         print(f"hi x: {x} y: {y}\n")
-        pxSize : int = self.matrixModePxSize
+        #pxSize : int = self.matrixModePxSize
+        pxSize : int = int(self.magnifyVal)
 
         if pxSize == 1:
             dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
@@ -1017,7 +1038,8 @@ class windowCreateImgBlock(wx.Frame):
             self.xintervals = int(self.x_totalSize)
             self.yintervals = int(self.y_totalSize)
 
-            pxSize : int = self.matrixModePxSize
+            pxSize : int = int(self.magnifyVal)
+            #pxSize : int = self.matrixModePxSize
 
             dc = wx.MemoryDC(self.bitmapForMap)
 
@@ -1059,6 +1081,34 @@ class windowCreateImgBlock(wx.Frame):
         else:
             print("hi2")
             self.selectedColor = self.tempColor2
+    
+    def bmpButton1Func(self, event : wx.EVT_BUTTON):#this is for magnify up
+        print("here1")
+        self.magnifyVal = self.magnifyInput.GetValue()
+        intValue = int(self.magnifyVal) + 1
+        intValue2 = 2 ** int(self.magnifyVal)
+        self.magnifyInput.Clear()
+        self.magnifyInput.AppendText(str(intValue))
+        
+        print(self.magnifyVal)
+        print(str(intValue2))
+        #self.matrixModePxSize = self.matrixModePxSize * 2
+
+    def bmpButton2Func(self, event : wx.EVT_BUTTON):#this is for magnify down
+        print("here2")
+        self.magnifyVal = self.magnifyInput.GetValue()
+        if self.magnifyVal != "1":
+            intValue = int(self.magnifyVal) - 1
+            intValue2 = (2 ** intValue)
+            self.magnifyInput.Clear()
+            self.magnifyInput.AppendText(str(intValue))
+
+        print(self.magnifyVal)
+        print(str(intValue2))
+        #if self.magnifyText != "1":
+            #self.matrixModePxSize = self.matrixModePxSize / 2
+        
+        
 
     def Quit(self, e):
         self.Close()
@@ -1264,6 +1314,7 @@ class TestPanel(scrolled.ScrolledPanel):
 
 def main():
     app = wx.App()
+    #wx.lib.inspection.InspectionTool().Show()
     windowClass(None)
     app.MainLoop()
 
