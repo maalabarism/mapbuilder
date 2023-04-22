@@ -420,8 +420,8 @@ class windowCreateImgBlock(wx.Frame):
         self.panel.setupScrolling()
 
         ##############ADDING TWO BUTTONS WITH BITMAP IMGS inside a vertical boxsizer, then added to self.panel specified box sizer.###########
-        self.bmpButton1 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap('./buttonup.png'), pos=(0, 0), size=(32, 16))
-        self.bmpButton2 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap('./buttonup2.png'), pos=(0, 0), size=(32, 16))
+        self.bmpButton1 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap('./buttonup2.png'), pos=(0, 0), size=(32, 16))
+        self.bmpButton2 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap('./buttondown.png'), pos=(0, 0), size=(32, 16))
         self.Bind(wx.EVT_BUTTON, self.bmpButton1Func, self.bmpButton1)
         self.Bind(wx.EVT_BUTTON, self.bmpButton2Func, self.bmpButton2)
         self.boxSizer = wx.BoxSizer(wx.VERTICAL)
@@ -511,16 +511,14 @@ class windowCreateImgBlock(wx.Frame):
         self.panel.addToBoxSizerHbox(self.eraseCheckbox)
         self.panel.setupScrolling()
 
-        self.magnifyText = wx.StaticText(self.panel, label="Magnify(x2):", pos=(0,0))
+        self.magnifyText = wx.StaticText(self.panel, label="Magnify(x2^n):", pos=(0,0))
         self.panel.setAddToBoxSizerVbox(self.magnifyText)
         self.panel.setupScrolling()
-        
-
-        self.changeMagnifyButton = wx.Button(self.panel, label="Change", pos=(0,0))#pos=(240,240))
+    
+        '''self.changeMagnifyButton = wx.Button(self.panel, label="Change", pos=(0,0))#pos=(240,240))
         self.Bind(wx.EVT_BUTTON, self.onChangeMagnify, self.changeMagnifyButton)
         self.panel.addToBoxSizerVHbox(self.changeMagnifyButton)
-        self.panel.setupScrolling()
-
+        self.panel.setupScrolling()'''
         ##########################################
 
         self.Show(True)
@@ -536,7 +534,8 @@ class windowCreateImgBlock(wx.Frame):
                 self.drawingMode = dlg.drawingMode # 2 options: drawing mode or matrix mode.
                 print(self.drawingMode)
             else:
-               self.log1.AppendText("No input found\n") 
+               self.log1.AppendText("No input found\n")
+               
     def getDialog2(self, e):
         dlg = GetData2(parent = self.panel)
         dlg.ShowModal()
@@ -727,26 +726,6 @@ class windowCreateImgBlock(wx.Frame):
                 self.panel.vbox.Detach(self.staticbitmap)
                 self.panel.addToBoxSizerVbox(self.staticbitmap)
                 self.panel.setupScrolling()
-
-    def onChangeMagnify(self, event : wx.EVT_BUTTON):
-        #self.magnifyVal = self.magnifyInput.GetValue()
-        print(self.magnifyVal)
-
-
-        tempBitmap2 : wx.Bitmap = self.staticbitmap.GetBitmap()
-
-        str1 = "val1: " + str(self.realMagnifyVal * int(self.x_totalSize)) + " val2: " + str(self.realMagnifyVal * int(self.y_totalSize))
-        print(str1)
-        sizeNeeded : wx.Size = wx.Size(self.realMagnifyVal * int(self.x_totalSize), self.realMagnifyVal * int(self.y_totalSize))
-
-        wx.Bitmap.Rescale(tempBitmap2, sizeNeeded)
-
-        self.staticbitmap.SetBitmap(tempBitmap2)
-        self.bitmapForMap = tempBitmap2
-        self.staticbitmap.Refresh()
-        #if self.drawingMode == "Matrix Mode":
-            #self.matrixModePxSize = int(self.magnifyInput.GetValue())
-
 
     # Some function for redrawing using the given colour. Ideally, it
     # shouldn't do anything if the colour is the same as the one used
@@ -948,6 +927,8 @@ class windowCreateImgBlock(wx.Frame):
         print(self.magnifyVal)
         print(self.realMagnifyVal)
 
+        self.onChangeMagnify()
+
     def bmpButton2Func(self, event : wx.EVT_BUTTON):#this is for magnify down
         print("here2")
         
@@ -959,6 +940,26 @@ class windowCreateImgBlock(wx.Frame):
 
         print(self.magnifyVal)
         print(self.realMagnifyVal)
+
+        self.onChangeMagnify()
+
+    def onChangeMagnify(self):
+        #self.magnifyVal = self.magnifyInput.GetValue()
+        print(self.magnifyVal)
+
+        tempBitmap2 : wx.Bitmap = self.staticbitmap.GetBitmap()
+
+        str1 = "val1: " + str(self.realMagnifyVal * int(self.x_totalSize)) + " val2: " + str(self.realMagnifyVal * int(self.y_totalSize))
+        print(str1)
+        sizeNeeded : wx.Size = wx.Size(self.realMagnifyVal * int(self.x_totalSize), self.realMagnifyVal * int(self.y_totalSize))
+
+        wx.Bitmap.Rescale(tempBitmap2, sizeNeeded)
+
+        self.staticbitmap.SetBitmap(tempBitmap2)
+        self.bitmapForMap = tempBitmap2
+        self.staticbitmap.Refresh()
+        #if self.drawingMode == "Matrix Mode":
+            #self.matrixModePxSize = int(self.magnifyInput.GetValue())
         
 
     def Quit(self, e):
