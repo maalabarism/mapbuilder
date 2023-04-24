@@ -13,6 +13,7 @@ isConfigSet2 = False
 isSelectedImageSet = False
 drawBool = False
 drawBool2 = False
+drawLineBool = False
 destroyCreateBlockWindow = False
 
 class windowClass(wx.Frame):
@@ -395,10 +396,11 @@ class windowCreateImgBlock(wx.Frame):
         self.tempColor : wx.Colour = defaultColor
         self.tempColor2 : wx.Colour = defaultColor
 
-        self.drawingMode : str = ""
+        self.drawingMode : str = "" # possibilities are: Painting Mode and Matrix Mode
+        self.drawingAction : str = "Draw" # possibilities are: fill, draw, line ,default is "Draw"
 
-        self.pos1 = None
-        self.pos2 = None
+        self.pos1Line = None
+        self.pos2Line = None
 
         self.basicGUI()
         self.getDrawingModeDialog(self)
@@ -430,6 +432,16 @@ class windowCreateImgBlock(wx.Frame):
         self.panel.addToBoxSizerVHbox(self.boxSizer)
         self.panel.setupScrolling()
         ############################################################
+        
+        self.drawingActionList = ["Draw", "Line", "Fill"]
+        self.drawingActionRadioBox : wx.RadioBox = wx.RadioBox(self.panel, pos = (0,0), choices = self.drawingActionList, majorDimension = 1, style = wx.RA_SPECIFY_ROWS)
+        self.Bind(wx.EVT_RADIOBOX, self.onDrawingActionChange, self.drawingActionRadioBox)
+        self.panel.addToBoxSizerVHbox(self.drawingActionRadioBox)
+        self.panel.setupScrolling()
+        ##self.lineCheckBox = wx.CheckBox(self.panel, id=wx.ID_ANY, label="Line", pos=(0, 0), style=0, name="lineCheckbox")
+        #self.Bind(wx.EVT_CHECKBOX, self.onEraseCheckbox, self.eraseCheckbox)
+        #self.panel.addToBoxSizerVHbox(self.lineCheckBox)
+        #self.panel.setupScrolling()
 
         global destroyCreateBlockWindow
         if destroyCreateBlockWindow:
@@ -841,8 +853,15 @@ class windowCreateImgBlock(wx.Frame):
 
         if pxSize == 0:
             dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
-            point = wx.Point(x, y)
-            dc.DrawPoint(point)
+            match self.drawingAction:
+                case "Draw":
+                    point = wx.Point(x, y)
+                    dc.DrawPoint(point)
+                    print("draw\n")
+                case "Line":
+                    print("line\n")
+                case "Fill":
+                    print("fill\n")
         else:
             self.xintervals = int(self.x_totalSize)
             self.yintervals = int(self.y_totalSize)
@@ -881,8 +900,15 @@ class windowCreateImgBlock(wx.Frame):
 
             if pxSize == 0:
                 dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
-                point = wx.Point(x, y)
-                dc.DrawPoint(point)
+                match self.drawingAction:
+                    case "Draw":
+                        point = wx.Point(x, y)
+                        dc.DrawPoint(point)
+                        print("draw2\n")
+                    case "Line":
+                        print("line2\n")
+                    case "Fill":
+                        print("fill2\n")
             else:
                 for x2 in range(int(self.xintervals)):
                     for y2 in range(int(self.yintervals)):
@@ -900,6 +926,34 @@ class windowCreateImgBlock(wx.Frame):
 
     def on_releaseMatrix(self, event : wx.MouseEvent):
         global drawBool
+        match self.drawingAction:
+            case "Draw":
+                print("draw3\n")
+            case "Line":
+                global drawLineBool
+                if drawLineBool == False:
+                    pxSize : int = self.magnifyVal
+                    if pxSize == 0:
+                        self.pos1Line = event.GetPosition()
+                        x, y = event.GetPosition()
+                        dc = wx.MemoryDC(self.bitmapForMap)
+                        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                        point = wx.Point(x, y)
+                        dc.DrawPoint(point)
+                    drawLineBool = True
+                else:
+                    pxSize : int = self.magnifyVal
+                    if pxSize == 0:
+                        self.pos2Line = event.GetPosition()
+                        dc = wx.MemoryDC(self.bitmapForMap)
+                        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                        dc.DrawLine(self.pos1Line[0], self.pos1Line[1], self.pos2Line[0], self.pos2Line[1])
+                    drawLineBool = False
+                self.staticbitmap.SetBitmap(self.bitmapForMap)
+                print("line3\n")
+            case "Fill":
+                print("fill2\n")
+        
         drawBool = False
         print("herehere\n")
         self.staticbitmap.Refresh()
@@ -960,8 +1014,13 @@ class windowCreateImgBlock(wx.Frame):
         self.staticbitmap.Refresh()
         #if self.drawingMode == "Matrix Mode":
             #self.matrixModePxSize = int(self.magnifyInput.GetValue())
+    
+    def onDrawingActionChange(self, event : wx.EVT_RADIOBUTTON):
+        index1 : int = self.drawingActionRadioBox.GetSelection()
+        tempResult: str = self.drawingActionList[index1]
+        self.drawingAction = tempResult
+        print(tempResult)
         
-
     def Quit(self, e):
         self.Close()
 
