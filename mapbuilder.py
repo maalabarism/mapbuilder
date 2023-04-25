@@ -803,14 +803,14 @@ class windowCreateImgBlock(wx.Frame):
         #dc.DrawBitmap(self.bitmapForMap, wx.Point(x, y))
         self.staticbitmap.SetBitmap(self.bitmapForMap)
 
-        global drawBool2
-        drawBool2 = True
+        global drawBool
+        drawBool = True
         event.Skip()
 
 
     def mouse_events(self, event : wx.MouseEvent):
         
-        if drawBool2 == True:
+        if drawBool == True:
             x, y = event.GetPosition()
             print(f"hi2 x: {x} y: {y}\n")
             
@@ -835,11 +835,12 @@ class windowCreateImgBlock(wx.Frame):
         event.Skip()
 
     def on_release(self, event : wx.MouseEvent):
-        global drawBool2
+        '''global drawBool2
         drawBool2 = False
         print("herehere2\n")
         self.staticbitmap.Refresh()
-        event.Skip()
+        event.Skip()'''
+        self.onReleaseFunc(event2=event, option=0)
 
     def on_clicMatrix(self, event : wx.MouseEvent):
         x, y = event.GetPosition()
@@ -925,39 +926,7 @@ class windowCreateImgBlock(wx.Frame):
         event.Skip()
 
     def on_releaseMatrix(self, event : wx.MouseEvent):
-        global drawBool
-        match self.drawingAction:
-            case "Draw":
-                print("draw3\n")
-            case "Line":
-                global drawLineBool
-                if drawLineBool == False:
-                    pxSize : int = self.magnifyVal
-                    if pxSize == 0:
-                        self.pos1Line = event.GetPosition()
-                        x, y = event.GetPosition()
-                        dc = wx.MemoryDC(self.bitmapForMap)
-                        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
-                        point = wx.Point(x, y)
-                        dc.DrawPoint(point)
-                    drawLineBool = True
-                else:
-                    pxSize : int = self.magnifyVal
-                    if pxSize == 0:
-                        self.pos2Line = event.GetPosition()
-                        dc = wx.MemoryDC(self.bitmapForMap)
-                        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
-                        dc.DrawLine(self.pos1Line[0], self.pos1Line[1], self.pos2Line[0], self.pos2Line[1])
-                    drawLineBool = False
-                self.staticbitmap.SetBitmap(self.bitmapForMap)
-                print("line3\n")
-            case "Fill":
-                print("fill2\n")
-        
-        drawBool = False
-        print("herehere\n")
-        self.staticbitmap.Refresh()
-        event.Skip()
+        self.onReleaseFunc(event2=event, option=1)
 
     def onEraseCheckbox(self, event : wx.EVT_CHECKBOX):
         if event.IsChecked():
@@ -1015,12 +984,98 @@ class windowCreateImgBlock(wx.Frame):
         #if self.drawingMode == "Matrix Mode":
             #self.matrixModePxSize = int(self.magnifyInput.GetValue())
     
-    def onDrawingActionChange(self, event : wx.EVT_RADIOBUTTON):
+    def onDrawingActionChange(self, event : wx.EVT_RADIOBUTTON): 
         index1 : int = self.drawingActionRadioBox.GetSelection()
         tempResult: str = self.drawingActionList[index1]
         self.drawingAction = tempResult
         print(tempResult)
+
+    def onReleaseFunc(self, event2 : wx.MouseEvent, option : int): #option == 1 is matrix 
+        global drawBool
+        match self.drawingAction:
+            case "Draw":
+                print("draw3\n")
+            case "Line":
+                global drawLineBool
+                if drawLineBool == False:
+                    pxSize : int = self.magnifyVal
+                    if pxSize == 0:
+                        self.pos1Line = event2.GetPosition()
+                        x, y = event2.GetPosition()
+                        dc = wx.MemoryDC(self.bitmapForMap)
+                        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                        point = wx.Point(x, y)
+                        dc.DrawPoint(point)
+                    else:
+                        self.pos1Line = event2.GetPosition()
+                        self.xintervals = int(self.x_totalSize)
+                        self.yintervals = int(self.y_totalSize)
+                        x, y = event2.GetPosition()
+                        pxSize2 : int = self.realMagnifyVal
+                        dc = wx.MemoryDC(self.bitmapForMap)
+                        for x2 in range(int(self.xintervals)):
+                            for y2 in range(int(self.yintervals)):
+                                if x in range(x2*pxSize2, pxSize2*(x2+1)):
+                                    if y in range(y2*pxSize2, pxSize2*(y2+1)):
+                                        print(f"here x2: {x2} and y2: {y2}")
+                                        xVal = x2
+                                        yVal = y2
+                        dc.SetBrush(wx.Brush(self.selectedColor))
+                        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                        dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
+                        '''self.pos1Line = event2.GetPosition()
+                        x, y = event2.GetPosition()
+                        dc = wx.MemoryDC(self.bitmapForMap)
+                        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                        point = wx.Point(x, y)
+                        dc.DrawPoint(point)'''
+                    drawLineBool = True
+                else:
+                    pxSize : int = self.magnifyVal
+                    if pxSize == 0:
+                        self.pos2Line = event2.GetPosition()
+                        dc = wx.MemoryDC(self.bitmapForMap)
+                        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                        dc.DrawLine(self.pos1Line[0], self.pos1Line[1], self.pos2Line[0], self.pos2Line[1])
+                    else:
+                        self.pos2Line = event2.GetPosition()
+                        self.DrawLineForMagnifiedBmp(pos1=self.pos1Line, pos2=self.pos2Line)
+                    drawLineBool = False
+                self.staticbitmap.SetBitmap(self.bitmapForMap)
+                print("line3\n")
+            case "Fill":
+                print("fill3\n")
         
+        drawBool = False
+        print("herehere\n")
+        self.staticbitmap.Refresh()
+        event2.Skip()
+
+    def DrawLineForMagnifiedBmp(self, pos1, pos2):
+        print("pos1: " + str(pos1[0]) + " " + str(pos1[1]) + " pos2: " + str(pos2[0]) + " " + str(pos2[1]) + "\n")
+        diffArr  = [0] * 2
+        slopeArr  = [0] * 2
+        diffArr[0] = pos2[0] - pos1[0]
+        diffArr[1] = pos2[1] - pos1[1]
+        slopeArr[0] = pos2[0] / pos1[0]
+        slopeArr[1] = pos2[1] / pos1[1]
+        slope = diffArr[1] / diffArr[0] #slope = rise/run
+        print("diffArr:\n")
+        print(diffArr)
+        print("slopeArr:\n")
+        print(slopeArr)
+        print("slope:\n")
+        print(slope)
+
+        yValuesList : list = []
+
+        yVal = pos1[1]
+        for x in range(pos1[0], (pos2[0]+1)): # maybe do in range((pos1[0]+1), (pos2[0]+1)) to ignore first yval entry because already drew that rect.
+            yValuesList.append(yVal)
+            print("x value: " + str(x) + " y value: " + str(yVal))
+            yVal += slope
+
+
     def Quit(self, e):
         self.Close()
 
