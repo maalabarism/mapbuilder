@@ -317,13 +317,8 @@ class windowClass(wx.Frame):
 
         self.xintervals = int((int(self.x_totalSize))/(int(self.result_x_dir)))
         self.yintervals = int((int(self.y_totalSize))/(int(self.result_y_dir)))
-        for x2 in range(int(self.xintervals)):
-            for y2 in range(int(self.yintervals)):
-                if x in range(x2*int(self.result_x_dir), int(self.result_x_dir)*(x2+1)):
-                    if y in range(y2*int(self.result_y_dir), int(self.result_y_dir)*(y2+1)):
-                        print(f"here x2: {x2} and y2: {y2}")
-                        xVal = x2
-                        yVal = y2
+        xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, 
+                                           arg1=int(self.result_x_dir), arg2= int(self.result_y_dir))
 
         selectedImageFile = wx.Bitmap(self.SelectedImagePathName)
         print(self.SelectedImagePathName)
@@ -345,13 +340,9 @@ class windowClass(wx.Frame):
 
             self.xintervals = int((int(self.x_totalSize))/(int(self.result_x_dir)))
             self.yintervals = int((int(self.y_totalSize))/(int(self.result_y_dir)))
-            for x2 in range(int(self.xintervals)):
-                for y2 in range(int(self.yintervals)):
-                    if x in range(x2*int(self.result_x_dir), int(self.result_x_dir)*(x2+1)):
-                        if y in range(y2*int(self.result_y_dir), int(self.result_y_dir)*(y2+1)):
-                            print(f"here x2: {x2} and y2: {y2}")
-                            xVal = x2
-                            yVal = y2
+
+            xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, 
+                                           arg1=int(self.result_x_dir), arg2= int(self.result_y_dir))
 
             selectedImageFile = wx.Bitmap(self.SelectedImagePathName)
             print(self.SelectedImagePathName)
@@ -866,14 +857,8 @@ class windowCreateImgBlock(wx.Frame):
         else:
             self.xintervals = int(self.x_totalSize)
             self.yintervals = int(self.y_totalSize)
-            for x2 in range(int(self.xintervals)):
-                for y2 in range(int(self.yintervals)):
-                    if x in range(x2*pxSize2, pxSize2*(x2+1)):
-                        if y in range(y2*pxSize2, pxSize2*(y2+1)):
-                            print(f"here x2: {x2} and y2: {y2}\n")
-                            print(f"here x: {x} and y: {y}\n")
-                            xVal = x2
-                            yVal = y2
+
+            xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
 
             dc.SetBrush(wx.Brush(self.selectedColor))
             dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
@@ -911,13 +896,7 @@ class windowCreateImgBlock(wx.Frame):
                     case "Fill":
                         print("fill2\n")
             else:
-                for x2 in range(int(self.xintervals)):
-                    for y2 in range(int(self.yintervals)):
-                        if x in range(x2*pxSize2, pxSize2*(x2+1)):
-                            if y in range(y2*pxSize2, pxSize2*(y2+1)):
-                                print(f"here x2: {x2} and y2: {y2}")
-                                xVal = x2
-                                yVal = y2
+                xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
 
                 dc.SetBrush(wx.Brush(self.selectedColor))
                 dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
@@ -1013,13 +992,9 @@ class windowCreateImgBlock(wx.Frame):
                         x, y = event2.GetPosition()
                         pxSize2 : int = self.realMagnifyVal
                         dc = wx.MemoryDC(self.bitmapForMap)
-                        for x2 in range(int(self.xintervals)):
-                            for y2 in range(int(self.yintervals)):
-                                if x in range(x2*pxSize2, pxSize2*(x2+1)):
-                                    if y in range(y2*pxSize2, pxSize2*(y2+1)):
-                                        print(f"here x2: {x2} and y2: {y2}")
-                                        xVal = x2
-                                        yVal = y2
+
+                        xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
+
                         dc.SetBrush(wx.Brush(self.selectedColor))
                         dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
                         dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
@@ -1059,22 +1034,55 @@ class windowCreateImgBlock(wx.Frame):
         diffArr[1] = pos2[1] - pos1[1]
         slopeArr[0] = pos2[0] / pos1[0]
         slopeArr[1] = pos2[1] / pos1[1]
-        slope = diffArr[1] / diffArr[0] #slope = rise/run
+        ySlope = diffArr[1] / diffArr[0] #slope = rise/run
+        xSlope = diffArr[0] / diffArr[1] #slope = run/rise
         print("diffArr:\n")
         print(diffArr)
+        print("diffArr[0]: " + str(diffArr[0]) + "\n")
+        print("diffArr[1]: " + str(diffArr[1]) + "\n")
         print("slopeArr:\n")
         print(slopeArr)
-        print("slope:\n")
-        print(slope)
-
+        print("xSlope:\n")
+        print(xSlope)
+        print("ySlope:\n")
+        print(ySlope)
+        
+        xValuesList : list = []
         yValuesList : list = []
+        xvalue = pos1[0]
+        yvalue = pos1[1]
+        pxSize : int = self.realMagnifyVal
+        dc = wx.MemoryDC(self.bitmapForMap)
+        dc.SetBrush(wx.Brush(self.selectedColor))
+        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+        self.xintervals = int(self.x_totalSize)
+        self.yintervals = int(self.y_totalSize)
 
-        yVal = pos1[1]
-        for x in range(pos1[0], (pos2[0]+1)): # maybe do in range((pos1[0]+1), (pos2[0]+1)) to ignore first yval entry because already drew that rect.
-            yValuesList.append(yVal)
-            print("x value: " + str(x) + " y value: " + str(yVal))
-            yVal += slope
-
+        if diffArr[0] > diffArr[1]:#if x axis has bigger difference
+            for xvalue in range((pos1[0]+1), (pos2[0]+1)): # maybe do in range((pos1[0]+1), (pos2[0]+1)) to ignore first yval entry because already drew that rect.
+                yValuesList.append(yvalue)
+                #print("x value: " + str(xvalue) + " y value: " + str(yvalue))
+                if diffArr[0] < 0 and diffArr[1] < 0:
+                    print("hhh")
+                    yvalue -= ySlope
+                else:
+                    yvalue += ySlope
+                yvalueRounded = round(yvalue)
+                xVal, yVal = getCoordinatesFromBmp(x1=xvalue, y1=yvalueRounded, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize, arg2=pxSize)
+                dc.DrawRectangle(x=(xVal*pxSize), y=(yVal*pxSize), width=pxSize, height=pxSize)
+        else:#if y axis has bigger difference
+            for yvalue in range((pos1[1]+1), (pos2[1]+1)): # maybe do in range((pos1[0]+1), (pos2[0]+1)) to ignore first yval entry because already drew that rect.
+                xValuesList.append(xvalue)#maybe need to have opposite orientation i.e: for yvalue in range((pos2[1]+1), (pos1[1]+1)): for if (diffArr[0] < 0) and (diffArr[1] < 0):
+                #print("x value: " + str(xvalue) + " y value: " + str(yvalue))
+                if (diffArr[0] < 0) and (diffArr[1] < 0):
+                    print("hhh")
+                    xvalue -= xSlope
+                else:
+                    xvalue += xSlope
+                xvalueRounded = round(xvalue)
+                #print("x value: " + str(xvalueRounded) + " y value: " + str(yvalue))
+                xVal, yVal = getCoordinatesFromBmp(x1=xvalueRounded, y1=yvalue, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize, arg2=pxSize)
+                dc.DrawRectangle(x=(xVal*pxSize), y=(yVal*pxSize), width=pxSize, height=pxSize)
 
     def Quit(self, e):
         self.Close()
@@ -1277,6 +1285,16 @@ class TestPanel(scrolled.ScrolledPanel):
     
     def addToBoxSizerVHbox(self, itemToAdd):
         self.vhbox.Add(itemToAdd)
+
+def getCoordinatesFromBmp(x1, y1, xintervals, yintervals, arg1, arg2):
+    for x2 in range(xintervals):
+        for y2 in range(yintervals):
+            if x1 in range(x2*arg1, arg1*(x2+1)):
+                if y1 in range(y2*arg2, arg2*(y2+1)):
+                    #print(f"here x2: {x2} and y2: {y2}")
+                    xVal2 = x2
+                    yVal2 = y2
+    return xVal2, yVal2
 
 def main():
     app = wx.App()
