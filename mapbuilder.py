@@ -462,7 +462,7 @@ class windowCreateImgBlock(wx.Frame):
 
     def basicGUI(self):
         #self.panel = wx.Panel(self)
-        self.panel = TestPanel(self)    
+        self.panel = TestPanel(self)
         self.log1 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(10, 0), size=(600,50), style = wx.TE_MULTILINE | wx.TE_READONLY)
         #ADD LOG2 TO BOX SIZER
         self.panel.addToBoxSizerHbox(self.log1)
@@ -1029,11 +1029,18 @@ class windowCreateImgBlock(wx.Frame):
     def DrawLineForMagnifiedBmp(self, pos1, pos2):
         print("pos1: " + str(pos1[0]) + " " + str(pos1[1]) + " pos2: " + str(pos2[0]) + " " + str(pos2[1]) + "\n")
         diffArr  = [0] * 2
+        diffArrAbs = [0] * 2
         slopeArr  = [0] * 2
         diffArr[0] = pos2[0] - pos1[0]
         diffArr[1] = pos2[1] - pos1[1]
+        diffArrAbs[0] = abs(diffArr[0])
+        diffArrAbs[1] = abs(diffArr[1])
         slopeArr[0] = pos2[0] / pos1[0]
         slopeArr[1] = pos2[1] / pos1[1]
+        if diffArr[0] == 0:
+            diffArr[0] = 1
+        if diffArr[1] == 0:
+            diffArr[1] = 1
         ySlope = diffArr[1] / diffArr[0] #slope = rise/run
         xSlope = diffArr[0] / diffArr[1] #slope = run/rise
         print("diffArr:\n")
@@ -1047,10 +1054,12 @@ class windowCreateImgBlock(wx.Frame):
         print("ySlope:\n")
         print(ySlope)
         
-        xValuesList : list = []
-        yValuesList : list = []
-        xvalue = pos1[0]
-        yvalue = pos1[1]
+        #xValuesList : list = []
+        #yValuesList : list = []
+        xvalue2 = pos1[0]
+        xvalue3 = pos2[0]
+        yvalue2 = pos1[1]
+        yvalue3 = pos2[1]
         pxSize : int = self.realMagnifyVal
         dc = wx.MemoryDC(self.bitmapForMap)
         dc.SetBrush(wx.Brush(self.selectedColor))
@@ -1059,30 +1068,32 @@ class windowCreateImgBlock(wx.Frame):
         self.yintervals = int(self.y_totalSize)
 
         if diffArr[0] > diffArr[1]:#if x axis has bigger difference
-            for xvalue in range((pos1[0]+1), (pos2[0]+1)): # maybe do in range((pos1[0]+1), (pos2[0]+1)) to ignore first yval entry because already drew that rect.
-                yValuesList.append(yvalue)
-                #print("x value: " + str(xvalue) + " y value: " + str(yvalue))
-                if diffArr[0] < 0 and diffArr[1] < 0:
-                    print("hhh")
-                    yvalue -= ySlope
-                else:
-                    yvalue += ySlope
-                yvalueRounded = round(yvalue)
-                xVal, yVal = getCoordinatesFromBmp(x1=xvalue, y1=yvalueRounded, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize, arg2=pxSize)
-                dc.DrawRectangle(x=(xVal*pxSize), y=(yVal*pxSize), width=pxSize, height=pxSize)
+            print("x axis bigger difference")
+            if diffArr[0] < 0 and  diffArr[1] < 0:
+                print("xxx")
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[0], pos_2=pos1[0], slope=ySlope, pxSize2=pxSize, value2=yvalue3, option=0, diffX=diffArr[0], diffY=diffArr[1])
+            else:
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[0], pos_2=pos2[0], slope=ySlope, pxSize2=pxSize, value2=yvalue2, option=0, diffX=diffArr[0], diffY=diffArr[1])
         else:#if y axis has bigger difference
-            for yvalue in range((pos1[1]+1), (pos2[1]+1)): # maybe do in range((pos1[0]+1), (pos2[0]+1)) to ignore first yval entry because already drew that rect.
-                xValuesList.append(xvalue)#maybe need to have opposite orientation i.e: for yvalue in range((pos2[1]+1), (pos1[1]+1)): for if (diffArr[0] < 0) and (diffArr[1] < 0):
-                #print("x value: " + str(xvalue) + " y value: " + str(yvalue))
-                if (diffArr[0] < 0) and (diffArr[1] < 0):
-                    print("hhh")
-                    xvalue -= xSlope
+            print("y axis bigger difference")
+            if diffArr[0] < 0 and  diffArr[1] < 0:
+                print("xxx")
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[1], pos_2=pos1[1], slope=xSlope, pxSize2=pxSize, value2=xvalue3, option=1, diffX=diffArr[0], diffY=diffArr[1])
+            else:
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[1], pos_2=pos2[1], slope=xSlope, pxSize2=pxSize, value2=xvalue2, option=1, diffX=diffArr[0], diffY=diffArr[1])
+    def DrawLineForMagnifiedBmpNeededFunc(self, pos_1, pos_2, slope, pxSize2, value2, option, diffX, diffY):#if option == 0 then if diffArr[0] > diffArr[1]
+        print("diffX:" + str(diffX) +  " and diffY: " + str(diffY))
+        dc = wx.MemoryDC(self.bitmapForMap)
+        dc.SetBrush(wx.Brush(self.selectedColor))
+        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+        for value in range((pos_1+1), (pos_2+1)): # maybe do in range((pos1[0]+1), (pos2[0]+1)) to ignore first yval entry because already drew that rect.
+                value2 += slope
+                valueRounded = round(value2)
+                if option == 0:
+                    xVal, yVal = getCoordinatesFromBmp(x1=value, y1=valueRounded, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2=pxSize2)
                 else:
-                    xvalue += xSlope
-                xvalueRounded = round(xvalue)
-                #print("x value: " + str(xvalueRounded) + " y value: " + str(yvalue))
-                xVal, yVal = getCoordinatesFromBmp(x1=xvalueRounded, y1=yvalue, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize, arg2=pxSize)
-                dc.DrawRectangle(x=(xVal*pxSize), y=(yVal*pxSize), width=pxSize, height=pxSize)
+                    xVal, yVal = getCoordinatesFromBmp(x1=valueRounded, y1=value, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2=pxSize2)
+                dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
 
     def Quit(self, e):
         self.Close()
