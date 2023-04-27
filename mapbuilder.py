@@ -1054,8 +1054,6 @@ class windowCreateImgBlock(wx.Frame):
         print("ySlope:\n")
         print(ySlope)
         
-        #xValuesList : list = []
-        #yValuesList : list = []
         xvalue2 = pos1[0]
         xvalue3 = pos2[0]
         yvalue2 = pos1[1]
@@ -1067,7 +1065,27 @@ class windowCreateImgBlock(wx.Frame):
         self.xintervals = int(self.x_totalSize)
         self.yintervals = int(self.y_totalSize)
 
-        if diffArr[0] > diffArr[1]:#if x axis has bigger difference
+        if diffArr[0] > 0 and  diffArr[1] > 0:
+            if diffArrAbs[0] > diffArrAbs[1]:
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[0], pos_2=pos2[0], slope=ySlope, pxSize2=pxSize, value2=yvalue2, option=0)
+            else:
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[1], pos_2=pos2[1], slope=xSlope, pxSize2=pxSize, value2=xvalue2, option=1)
+        elif diffArr[0] < 0 and  diffArr[1] > 0:
+            if diffArrAbs[0] > diffArrAbs[1]:
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[0], pos_2=pos1[0], slope=ySlope, pxSize2=pxSize, value2=yvalue3, option=0)
+            else:
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[1], pos_2=pos2[1], slope=xSlope, pxSize2=pxSize, value2=xvalue2, option=1)
+        elif diffArr[0] > 0 and  diffArr[1] < 0:
+            if diffArrAbs[0] > diffArrAbs[1]:
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[0], pos_2=pos2[0], slope=ySlope, pxSize2=pxSize, value2=yvalue2, option=0)
+            else:
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[1], pos_2=pos1[1], slope=xSlope, pxSize2=pxSize, value2=xvalue3, option=1)
+        else:
+            if diffArrAbs[0] > diffArrAbs[1]:
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[0], pos_2=pos1[0], slope=ySlope, pxSize2=pxSize, value2=yvalue3, option=0)
+            else:
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[1], pos_2=pos1[1], slope=xSlope, pxSize2=pxSize, value2=xvalue3, option=1)
+        '''if diffArr[0] > diffArr[1]:#if x axis has bigger difference
             print("x axis bigger difference")
             if diffArr[0] < 0 and  diffArr[1] < 0:
                 print("xxx")
@@ -1080,9 +1098,10 @@ class windowCreateImgBlock(wx.Frame):
                 print("xxx")
                 self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[1], pos_2=pos1[1], slope=xSlope, pxSize2=pxSize, value2=xvalue3, option=1, diffX=diffArr[0], diffY=diffArr[1])
             else:
-                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[1], pos_2=pos2[1], slope=xSlope, pxSize2=pxSize, value2=xvalue2, option=1, diffX=diffArr[0], diffY=diffArr[1])
-    def DrawLineForMagnifiedBmpNeededFunc(self, pos_1, pos_2, slope, pxSize2, value2, option, diffX, diffY):#if option == 0 then if diffArr[0] > diffArr[1]
-        print("diffX:" + str(diffX) +  " and diffY: " + str(diffY))
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[1], pos_2=pos2[1], slope=xSlope, pxSize2=pxSize, value2=xvalue2, option=1, diffX=diffArr[0], diffY=diffArr[1])'''
+        
+    def DrawLineForMagnifiedBmpNeededFunc(self, pos_1, pos_2, slope, pxSize2, value2, option):#if option == 0 then if diffArr[0] > diffArr[1]
+        #print("diffX:" + str(diffX) +  " and diffY: " + str(diffY))
         dc = wx.MemoryDC(self.bitmapForMap)
         dc.SetBrush(wx.Brush(self.selectedColor))
         dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
