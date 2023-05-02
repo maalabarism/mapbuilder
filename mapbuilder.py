@@ -15,6 +15,7 @@ drawBool = False
 drawBool2 = False
 drawLineBool = False
 destroyCreateBlockWindow = False
+clearRedoList = False
 
 class windowClass(wx.Frame):
 
@@ -37,13 +38,13 @@ class windowClass(wx.Frame):
         fileButton = wx.Menu()
         helpButton = wx.Menu()
 
-        openProjectItem = wx.MenuItem(fileButton, wx.ID_ANY, 'Open project')
-        saveFileItem = wx.MenuItem(fileButton, wx.ID_SAVE, 'Save map')
-        saveProjectItem = wx.MenuItem(fileButton, wx.ID_ANY, 'Save project')
-        selectImageItem = wx.MenuItem(fileButton, wx.ID_FILE, 'Select image block')
-        createImageItem = wx.MenuItem(fileButton, wx.ID_ANY, 'Create image block')
-        configItem = wx.MenuItem(fileButton, wx.ID_ANY, 'New Project')
-        exitItem = wx.MenuItem(fileButton, wx.ID_EXIT, 'Quit')
+        openProjectItem = wx.MenuItem(fileButton, wx.ID_ANY, 'Open project\tCtrl+O')
+        saveFileItem = wx.MenuItem(fileButton, wx.ID_SAVE, 'Save map\tCtrl+I')
+        saveProjectItem = wx.MenuItem(fileButton, wx.ID_ANY, 'Save project\tCtrl+S')
+        selectImageItem = wx.MenuItem(fileButton, wx.ID_FILE, 'Select image block\tCtrl+E')
+        createImageItem = wx.MenuItem(fileButton, wx.ID_ANY, 'Create image block\tCtrl+B')
+        configItem = wx.MenuItem(fileButton, wx.ID_ANY, 'New Project\tCtrl+N')
+        exitItem = wx.MenuItem(fileButton, wx.ID_EXIT, 'Quit\tCtrl+Q')
         
         helpItem = wx.MenuItem(helpButton, wx.ID_ANY, 'Help')
 
@@ -379,6 +380,11 @@ class windowCreateImgBlock(wx.Frame):
         defaultColor = wx.Colour()
         defaultColor.Set("#33FFCB")
 
+        self.undo_list : list = []
+        self.redo_list : list = []
+        self.undo_list_index = 0
+        self.redo_list_index = 0
+
         self.magnifyVal : int = 0 
         self.realMagnifyVal : int = 1
         self.magnifyValStr : str ="0" #magnifyVal str is 0 when strVal is 1
@@ -474,18 +480,27 @@ class windowCreateImgBlock(wx.Frame):
 
         menuBar = wx.MenuBar()
         fileButton = wx.Menu()
+        editButton = wx.Menu()
 
-        saveImageItem = wx.MenuItem(fileButton, wx.ID_SAVE, 'Save image')
-        saveBlockProject = wx.MenuItem(fileButton, wx.ID_ANY, 'Save create block project')
-        openBlockProject = wx.MenuItem(fileButton, wx.ID_ANY, 'Open block project')
-        exitItem = wx.MenuItem(fileButton, wx.ID_EXIT, 'Quit')
+        saveImageItem = wx.MenuItem(fileButton, wx.ID_SAVE, 'Save image\tCtrl+I')
+        saveBlockProject = wx.MenuItem(fileButton, wx.ID_ANY, 'Save create block project\tCtrl+S')
+        openBlockProject = wx.MenuItem(fileButton, wx.ID_ANY, 'Open block project\tCtrl+O')
+        exitItem = wx.MenuItem(fileButton, wx.ID_EXIT, 'Quit\tCtrl+Q')
+
+        redoItem = wx.MenuItem(editButton, wx.ID_ANY, 'Redo\tCtrl+Y')
+        undoItem = wx.MenuItem(editButton, wx.ID_ANY, 'Undo\tCtrl+Z')
         
         fileButton.Append(saveImageItem)
         fileButton.Append(saveBlockProject)
         fileButton.Append(openBlockProject)
         fileButton.Append(exitItem)
 
+        editButton.Append(redoItem)
+        editButton.Append(undoItem)
+
         menuBar.Append(fileButton, '&File')
+
+        menuBar.Append(editButton, '&Edit')
         
         self.SetMenuBar(menuBar)
 
@@ -493,6 +508,9 @@ class windowCreateImgBlock(wx.Frame):
         self.Bind(wx.EVT_MENU, self.SaveProject, saveBlockProject)
         self.Bind(wx.EVT_MENU, self.OpenProject, openBlockProject)
         self.Bind(wx.EVT_MENU, self.Quit, exitItem)
+
+        self.Bind(wx.EVT_MENU, self.editRedo, redoItem)
+        self.Bind(wx.EVT_MENU, self.editUndo, undoItem)
 
         self.SetTitle('Create Image Block')
         
@@ -549,9 +567,11 @@ class windowCreateImgBlock(wx.Frame):
 
             if(self.drawingMode == "Painting Mode"):
                 self.displayMap2(self)
+                self.undo_list.append(self.staticbitmap.GetBitmap())
                 dlg.Destroy()
             else:
                 self.displayMapForMatrix(self)
+                self.undo_list.append(self.staticbitmap.GetBitmap())
                 dlg.Destroy()
             
         else:
@@ -1016,11 +1036,18 @@ class windowCreateImgBlock(wx.Frame):
                         self.pos2Line = event2.GetPosition()
                         self.DrawLineForMagnifiedBmp(pos1=self.pos1Line, pos2=self.pos2Line)
                     drawLineBool = False
+                
                 self.staticbitmap.SetBitmap(self.bitmapForMap)
                 print("line3\n")
             case "Fill":
                 print("fill3\n")
         
+        self.undo_list.append(self.staticbitmap.GetBitmap())
+        self.undo_list_index += 1
+
+        print(self.undo_list)
+        print(self.undo_list_index)
+
         drawBool = False
         print("herehere\n")
         self.staticbitmap.Refresh()
@@ -1059,9 +1086,6 @@ class windowCreateImgBlock(wx.Frame):
         yvalue2 = pos1[1]
         yvalue3 = pos2[1]
         pxSize : int = self.realMagnifyVal
-        dc = wx.MemoryDC(self.bitmapForMap)
-        dc.SetBrush(wx.Brush(self.selectedColor))
-        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
         self.xintervals = int(self.x_totalSize)
         self.yintervals = int(self.y_totalSize)
 
@@ -1113,6 +1137,40 @@ class windowCreateImgBlock(wx.Frame):
                 else:
                     xVal, yVal = getCoordinatesFromBmp(x1=valueRounded, y1=value, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2=pxSize2)
                 dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
+
+    def editRedo(self, e):
+        if len(self.redo_list) > 0:
+            bmp = self.redo_list.pop()
+
+            self.undo_list.append(bmp)
+            self.undo_list_index += 1
+
+            sizeNeeded : wx.Size = wx.Size(self.realMagnifyVal * int(self.x_totalSize), self.realMagnifyVal * int(self.y_totalSize))
+            wx.Bitmap.Rescale(bmp, sizeNeeded)
+
+            self.staticbitmap.SetBitmap(bmp)
+            self.bitmapForMap = self.staticbitmap.GetBitmap()
+
+        print("editRedo")
+    
+    def editUndo(self, e):
+        
+        if len(self.undo_list) > 1:
+            removedItem = self.undo_list.pop(self.undo_list_index)
+
+            self.redo_list.append(removedItem)
+
+            self.undo_list_index -= 1
+            tempBmp : wx.Bitmap = self.undo_list[self.undo_list_index]
+
+            sizeNeeded : wx.Size = wx.Size(self.realMagnifyVal * int(self.x_totalSize), self.realMagnifyVal * int(self.y_totalSize))
+            
+            wx.Bitmap.Rescale(tempBmp, sizeNeeded)
+
+            print("editUndo")
+            self.staticbitmap.SetBitmap(tempBmp)
+            self.bitmapForMap = self.staticbitmap.GetBitmap()
+
 
     def Quit(self, e):
         self.Close()
