@@ -1042,6 +1042,9 @@ class windowCreateImgBlock(wx.Frame):
             case "Fill":
                 print("fill3\n")
         
+        if len(self.redo_list) > 0:
+            self.redo_list.clear()
+
         self.undo_list.append(self.staticbitmap.GetBitmap())
         self.undo_list_index += 1
 
