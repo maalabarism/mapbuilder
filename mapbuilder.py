@@ -5,7 +5,7 @@ import wx.lib.scrolledpanel as scrolled
 import base64
 from io import BytesIO
 import os
-import time
+#import time
 
 #global variables:
 isConfigSet = False
@@ -15,7 +15,8 @@ drawBool = False
 drawBool2 = False
 drawLineBool = False
 destroyCreateBlockWindow = False
-clearRedoList = False
+
+leftColorTrue = False
 
 class windowClass(wx.Frame):
 
@@ -378,7 +379,9 @@ class windowCreateImgBlock(wx.Frame):
         super(windowCreateImgBlock, self).__init__(*args, **kwargs)
 
         defaultColor = wx.Colour()
+        defaultColor2 = wx.Colour()
         defaultColor.Set("#33FFCB")
+        defaultColor2.Set("#D329E3")
 
         self.undo_list : list = []
         self.redo_list : list = []
@@ -390,6 +393,7 @@ class windowCreateImgBlock(wx.Frame):
         self.magnifyValStr : str ="0" #magnifyVal str is 0 when strVal is 1
 
         self.selectedColor : wx.Colour = defaultColor
+        self.selectedColorRight : wx.Colour = defaultColor2
         self.tempColor : wx.Colour = defaultColor
         self.tempColor2 : wx.Colour = defaultColor
 
@@ -404,12 +408,16 @@ class windowCreateImgBlock(wx.Frame):
 
         if(self.drawingMode == "Painting Mode"): #Check drawing mode and init variables.
             self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
+            self.staticbitmap.Bind(wx.EVT_RIGHT_DOWN, self.on_clic)
             self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
             self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_release)
+            self.staticbitmap.Bind(wx.EVT_RIGHT_UP, self.on_release)
         else: #this is for matrix mode
             self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clicMatrix)
+            self.staticbitmap.Bind(wx.EVT_RIGHT_DOWN, self.on_clicMatrix)
             self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_eventsMatrix)
             self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_releaseMatrix)
+            self.staticbitmap.Bind(wx.EVT_RIGHT_UP, self.on_releaseMatrix)
             
         self.magnifyInput = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(30,30), value=self.magnifyValStr)
         #self.magnifyInput2 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(50,30), value=defaultMagnifySize2, style = wx.TE_MULTILINE | wx.TE_READONLY)
@@ -793,6 +801,7 @@ class windowCreateImgBlock(wx.Frame):
     def on_clic(self, event : wx.MouseEvent):
         x, y = event.GetPosition()
         print(f"hi2 x: {x} y: {y}\n")
+        selectedColor = self.getColorLeftRightClick(evt=event)
         
         dc = wx.MemoryDC(self.bitmapForMap)
         if(self.magnifyVal > 0):
@@ -800,11 +809,11 @@ class windowCreateImgBlock(wx.Frame):
             width2 = self.realMagnifyVal
             height2 = self.realMagnifyVal
             #dc.SetBrush(wx.Brush('#FFFFFF'))
-            dc.SetBrush(wx.Brush(self.selectedColor))
-            dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+            dc.SetBrush(wx.Brush(selectedColor))
+            dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
             dc.DrawRectangle(x, y, width2, height2)
         else:
-            dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+            dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
             point = wx.Point(x, y)
             dc.DrawPoint(point)
 
@@ -854,6 +863,9 @@ class windowCreateImgBlock(wx.Frame):
         self.onReleaseFunc(event2=event, option=0)
 
     def on_clicMatrix(self, event : wx.MouseEvent):
+        
+        selectedColor = self.getColorLeftRightClick(evt=event)
+        
         x, y = event.GetPosition()
         
         dc = wx.MemoryDC(self.bitmapForMap)
@@ -864,7 +876,7 @@ class windowCreateImgBlock(wx.Frame):
         pxSize2 : int = self.realMagnifyVal
 
         if pxSize == 0:
-            dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+            dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
             match self.drawingAction:
                 case "Draw":
                     point = wx.Point(x, y)
@@ -880,17 +892,23 @@ class windowCreateImgBlock(wx.Frame):
 
             xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
 
-            dc.SetBrush(wx.Brush(self.selectedColor))
-            dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+            dc.SetBrush(wx.Brush(selectedColor))
+            dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
             dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
             
-        self.staticbitmap.SetBitmap(self.bitmapForMap)    
+        self.staticbitmap.SetBitmap(self.bitmapForMap) 
         global drawBool
         drawBool = True
         event.Skip()
 
 
     def mouse_eventsMatrix(self, event : wx.MouseEvent):
+        global leftColorTrue
+        if leftColorTrue == True:
+            selectedColor = self.selectedColor
+        else:
+            selectedColor = self.selectedColorRight
+
         if drawBool == True:
             x, y = event.GetPosition()
             print(f"hi x: {x} y: {y}\n")
@@ -905,7 +923,7 @@ class windowCreateImgBlock(wx.Frame):
             dc = wx.MemoryDC(self.bitmapForMap)
 
             if pxSize == 0:
-                dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
                 match self.drawingAction:
                     case "Draw":
                         point = wx.Point(x, y)
@@ -916,11 +934,18 @@ class windowCreateImgBlock(wx.Frame):
                     case "Fill":
                         print("fill2\n")
             else:
-                xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
+                match self.drawingAction:
+                    case "Draw":
+                        xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
+                        dc.SetBrush(wx.Brush(selectedColor))
+                        dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
+                        dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
+                        print("draw2\n")
+                    case "Line":
+                        print("line2\n")
+                    case "Fill":
+                        print("fill2\n")
 
-                dc.SetBrush(wx.Brush(self.selectedColor))
-                dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
-                dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
             self.staticbitmap.SetBitmap(self.bitmapForMap)
         event.Skip()
 
@@ -930,13 +955,13 @@ class windowCreateImgBlock(wx.Frame):
     def onEraseCheckbox(self, event : wx.EVT_CHECKBOX):
         if event.IsChecked():
             print("hi1")
-            self.tempColor2 = self.selectedColor
+            self.tempColor2 = selectedColor
             color1 = wx.Colour()
             color1.Set("#FFFFFF")
-            self.selectedColor = color1
+            selectedColor = color1
         else:
             print("hi2")
-            self.selectedColor = self.tempColor2
+            selectedColor = self.tempColor2
     
     def bmpButton1Func(self, event : wx.EVT_BUTTON):#this is for magnify up
         print("here1")
@@ -989,7 +1014,8 @@ class windowCreateImgBlock(wx.Frame):
         self.drawingAction = tempResult
         print(tempResult)
 
-    def onReleaseFunc(self, event2 : wx.MouseEvent, option : int): #option == 1 is matrix 
+    def onReleaseFunc(self, event2 : wx.MouseEvent, option : int): #option == 1 is matrix
+        selectedColor = self.getColorLeftRightClick(evt=event2)
         global drawBool
         match self.drawingAction:
             case "Draw":
@@ -1002,7 +1028,7 @@ class windowCreateImgBlock(wx.Frame):
                         self.pos1Line = event2.GetPosition()
                         x, y = event2.GetPosition()
                         dc = wx.MemoryDC(self.bitmapForMap)
-                        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                        dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
                         point = wx.Point(x, y)
                         dc.DrawPoint(point)
                     else:
@@ -1015,8 +1041,8 @@ class windowCreateImgBlock(wx.Frame):
 
                         xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
 
-                        dc.SetBrush(wx.Brush(self.selectedColor))
-                        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                        dc.SetBrush(wx.Brush(selectedColor))
+                        dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
                         dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
                         '''self.pos1Line = event2.GetPosition()
                         x, y = event2.GetPosition()
@@ -1030,7 +1056,7 @@ class windowCreateImgBlock(wx.Frame):
                     if pxSize == 0:
                         self.pos2Line = event2.GetPosition()
                         dc = wx.MemoryDC(self.bitmapForMap)
-                        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                        dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
                         dc.DrawLine(self.pos1Line[0], self.pos1Line[1], self.pos2Line[0], self.pos2Line[1])
                     else:
                         self.pos2Line = event2.GetPosition()
@@ -1042,6 +1068,9 @@ class windowCreateImgBlock(wx.Frame):
             case "Fill":
                 print("fill3\n")
         
+        global leftColorTrue
+        leftColorTrue = False
+
         if len(self.redo_list) > 0:
             self.redo_list.clear()
 
@@ -1128,10 +1157,15 @@ class windowCreateImgBlock(wx.Frame):
                 self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[1], pos_2=pos2[1], slope=xSlope, pxSize2=pxSize, value2=xvalue2, option=1, diffX=diffArr[0], diffY=diffArr[1])'''
         
     def DrawLineForMagnifiedBmpNeededFunc(self, pos_1, pos_2, slope, pxSize2, value2, option):#if option == 0 then if diffArr[0] > diffArr[1]
+        global leftColorTrue
+        if leftColorTrue == True:
+            selectedColor = self.selectedColor
+        else:
+            selectedColor = self.selectedColorRight
         #print("diffX:" + str(diffX) +  " and diffY: " + str(diffY))
         dc = wx.MemoryDC(self.bitmapForMap)
-        dc.SetBrush(wx.Brush(self.selectedColor))
-        dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+        dc.SetBrush(wx.Brush(selectedColor))
+        dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
         for value in range((pos_1+1), (pos_2+1)): # maybe do in range((pos1[0]+1), (pos2[0]+1)) to ignore first yval entry because already drew that rect.
                 value2 += slope
                 valueRounded = round(value2)
@@ -1157,7 +1191,6 @@ class windowCreateImgBlock(wx.Frame):
         print("editRedo")
     
     def editUndo(self, e):
-        
         if len(self.undo_list) > 1:
             removedItem = self.undo_list.pop(self.undo_list_index)
 
@@ -1174,6 +1207,17 @@ class windowCreateImgBlock(wx.Frame):
             self.staticbitmap.SetBitmap(tempBmp)
             self.bitmapForMap = self.staticbitmap.GetBitmap()
 
+    def getColorLeftRightClick(self, evt):
+        evtType = evt.GetEventType()
+        if evtType == wx.wxEVT_LEFT_DOWN or evtType == wx.wxEVT_LEFT_UP:
+            print("leftclick")
+            selectedColor2= self.selectedColor
+            global leftColorTrue
+            leftColorTrue = True
+        if evtType == wx.wxEVT_RIGHT_DOWN or evtType == wx.wxEVT_RIGHT_UP:
+            print("rightclick")
+            selectedColor2= self.selectedColorRight
+        return selectedColor2
 
     def Quit(self, e):
         self.Close()
@@ -1392,5 +1436,6 @@ def main():
     #wx.lib.inspection.InspectionTool().Show()
     windowClass(None)
     app.MainLoop()
+    return 0
 
 main()
