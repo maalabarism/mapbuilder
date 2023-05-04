@@ -829,7 +829,13 @@ class windowCreateImgBlock(wx.Frame):
 
 
     def mouse_events(self, event : wx.MouseEvent):
-        
+
+        global leftColorTrue
+        if leftColorTrue == True:
+            selectedColor = self.selectedColor
+        else:
+            selectedColor = self.selectedColorRight
+
         if drawBool == True:
             x, y = event.GetPosition()
             print(f"hi2 x: {x} y: {y}\n")
@@ -840,11 +846,11 @@ class windowCreateImgBlock(wx.Frame):
                 width2 = self.realMagnifyVal
                 height2 = self.realMagnifyVal
                 #dc.SetBrush(wx.Brush('#FFFFFF'))
-                dc.SetBrush(wx.Brush(self.selectedColor))
-                dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                dc.SetBrush(wx.Brush(selectedColor))
+                dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
                 dc.DrawRectangle(x, y, width2, height2)
             else:
-                dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
+                dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
                 point = wx.Point(x, y)
                 dc.DrawPoint(point)
 
