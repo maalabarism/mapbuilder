@@ -535,6 +535,29 @@ class windowCreateImgBlock(wx.Frame):
         self.panel.addToBoxSizerHbox(self.select_colorButton)
         self.panel.setupScrolling()
 
+        self.selectedColorsTxt = wx.StaticText(self.panel, label="Selected colors:", pos=(0,0))
+        self.panel.addToBoxSizerHbox(self.selectedColorsTxt)
+        self.panel.setupScrolling()
+
+        
+        colorBmpSize = wx.Size(20, 20)
+        bmp1 = wx.Bitmap(sz=colorBmpSize)
+        bmp2 = wx.Bitmap(sz=colorBmpSize)
+        dc1 = wx.MemoryDC(bmp1)
+        dc2 = wx.MemoryDC(bmp2)
+        dc1.SetBrush(wx.Brush(self.selectedColor))
+        dc1.DrawRectangle(0, 0, width=20, height=20)
+        dc2.SetBrush(wx.Brush(self.selectedColorRight))
+        dc2.DrawRectangle(0, 0, width=20, height=20)
+        
+        self.color1Bmp = wx.StaticBitmap(self.panel, id=wx.ID_ANY, bitmap=bmp1, pos=(0,0), size=colorBmpSize, style=0, name="leftclickcolorbmp")
+        self.panel.addToBoxSizerHbox(self.color1Bmp)
+        self.panel.setupScrolling()
+
+        self.color2Bmp = wx.StaticBitmap(self.panel, id=wx.ID_ANY, bitmap=bmp2, pos=(0,0), size=colorBmpSize, style=0, name="rightclickcolorbmp")
+        self.panel.addToBoxSizerHbox(self.color2Bmp)
+        self.panel.setupScrolling()
+
         self.eraseCheckbox = wx.CheckBox(self.panel, id=wx.ID_ANY, label="Erase", pos=(820, 0), style=0, name="eraseCheckbox")
         self.Bind(wx.EVT_CHECKBOX, self.onEraseCheckbox, self.eraseCheckbox)
         self.panel.addToBoxSizerHbox(self.eraseCheckbox)
@@ -780,7 +803,23 @@ class windowCreateImgBlock(wx.Frame):
         if (dlg.ShowModal() == wx.ID_OK):
             #color : wx.Colour = data.GetColour() #is of wx.Colour type
             self.log1.AppendText("\nyes")
+
+            self.selectedColorRight = self.selectedColor
             self.selectedColor = self.tempColor
+
+            colorBmpSize = wx.Size(20, 20)
+            bmp1 = wx.Bitmap(sz=colorBmpSize)
+            bmp2 = wx.Bitmap(sz=colorBmpSize)
+            dc1 = wx.MemoryDC(bmp1)
+            dc2 = wx.MemoryDC(bmp2)
+            dc1.SetBrush(wx.Brush(self.selectedColor))
+            dc1.DrawRectangle(0, 0, width=20, height=20)
+            dc2.SetBrush(wx.Brush(self.selectedColorRight))
+            dc2.DrawRectangle(0, 0, width=20, height=20)
+            self.color1Bmp.SetBitmap(bmp1)
+            self.color2Bmp.SetBitmap(bmp2)
+            self.color1Bmp.Refresh()
+            self.color2Bmp.Refresh()
 
             str1 = "Selected color herehere: " + self.selectedColor.GetAsString()
             self.log1.Clear()
@@ -961,13 +1000,13 @@ class windowCreateImgBlock(wx.Frame):
     def onEraseCheckbox(self, event : wx.EVT_CHECKBOX):
         if event.IsChecked():
             print("hi1")
-            self.tempColor2 = selectedColor
+            self.tempColor2 = self.selectedColor
             color1 = wx.Colour()
             color1.Set("#FFFFFF")
-            selectedColor = color1
+            self.selectedColor = color1
         else:
             print("hi2")
-            selectedColor = self.tempColor2
+            self.selectedColor = self.tempColor2
     
     def bmpButton1Func(self, event : wx.EVT_BUTTON):#this is for magnify up
         print("here1")
