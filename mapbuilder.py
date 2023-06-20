@@ -23,6 +23,11 @@ class windowClass(wx.Frame):
     def __init__(self, *args, **kwargs): #arguments and keyword arguments
         super(windowClass, self).__init__(*args, **kwargs)
 
+        self.undo_list2 : list = []
+        self.redo_list2 : list = []
+        self.undo_list_index2 = 0
+        self.redo_list_index2 = 0
+
         self.counter = 0
         self.counter2 = 0
         self.basicGUI()
@@ -37,6 +42,7 @@ class windowClass(wx.Frame):
 
         menuBar = wx.MenuBar()
         fileButton = wx.Menu()
+        editButton = wx.Menu()
         helpButton = wx.Menu()
 
         openProjectItem = wx.MenuItem(fileButton, wx.ID_ANY, 'Open project\tCtrl+O')
@@ -46,6 +52,9 @@ class windowClass(wx.Frame):
         createImageItem = wx.MenuItem(fileButton, wx.ID_ANY, 'Create image block\tCtrl+B')
         configItem = wx.MenuItem(fileButton, wx.ID_ANY, 'New Project\tCtrl+N')
         exitItem = wx.MenuItem(fileButton, wx.ID_EXIT, 'Quit\tCtrl+Q')
+
+        redoItem = wx.MenuItem(editButton, wx.ID_ANY, 'Redo\tCtrl+Y')
+        undoItem = wx.MenuItem(editButton, wx.ID_ANY, 'Undo\tCtrl+Z')
         
         helpItem = wx.MenuItem(helpButton, wx.ID_ANY, 'Help')
 
@@ -57,9 +66,13 @@ class windowClass(wx.Frame):
         fileButton.Append(configItem)
         fileButton.Append(exitItem)
 
+        editButton.Append(redoItem)
+        editButton.Append(undoItem)
+
         helpButton.Append(helpItem)
 
         menuBar.Append(fileButton, '&File')
+        menuBar.Append(editButton, '&Edit')
         menuBar.Append(helpButton, '&Help')
         
         self.staticbitmap2 = wx.StaticBitmap(self.panel, pos=(10, 60))#this function has position, it is for selected image displayed.
@@ -73,7 +86,9 @@ class windowClass(wx.Frame):
         self.Bind(wx.EVT_MENU, self.Config, configItem)
         self.Bind(wx.EVT_MENU, self.Quit, exitItem)
         self.Bind(wx.EVT_MENU, self.ShowHelp, helpItem)
-        
+
+        self.Bind(wx.EVT_MENU, self.editRedo, redoItem)
+        self.Bind(wx.EVT_MENU, self.editUndo, undoItem)
         
         self.staticbitmap2.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
         self.staticbitmap2.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
@@ -272,12 +287,14 @@ class windowClass(wx.Frame):
                 self.x_totalSize = dlg.x_totalSize
                 self.y_totalSize = dlg.y_totalSize
             else:
-               self.log1.AppendText("No input found\n") 
+               self.log1.AppendText("No input found\n")
         else:
             self.log1.AppendText("No input found\n")
         
         if dlg.isDataThere:
             self.displayMap(self)
+            self.undo_list2.append(self.staticbitmap2.GetBitmap())
+        
         #self.log2 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(0, 60), size=(int(dlg.x_totalSize), int(dlg.y_totalSize)), style = wx.TE_MULTILINE | wx.VSCROLL)
         dlg.Destroy()
 
@@ -362,7 +379,44 @@ class windowClass(wx.Frame):
         drawBool = False
         print("herehere\n")
         self.staticbitmap2.Refresh()
+
+        if len(self.redo_list2) > 0:
+            self.redo_list2.clear()
+        self.undo_list2.append(self.staticbitmap2.GetBitmap())
+        self.undo_list_index2 += 1
         event.Skip()
+    
+    def editRedo(self, e):
+        if len(self.redo_list2) > 0:
+            bmp = self.redo_list2.pop()
+
+            self.undo_list2.append(bmp)
+            self.undo_list_index2 += 1
+
+            sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSize))
+            wx.Bitmap.Rescale(bmp, sizeNeeded)
+
+            self.staticbitmap2.SetBitmap(bmp)
+            self.bitmapForMap = self.staticbitmap2.GetBitmap()
+
+        print("editRedo")
+    
+    def editUndo(self, e):
+        if len(self.undo_list2) > 1:
+            removedItem = self.undo_list2.pop(self.undo_list_index2)
+
+            self.redo_list2.append(removedItem)
+
+            self.undo_list_index2 -= 1
+            tempBmp : wx.Bitmap = self.undo_list2[self.undo_list_index2]
+
+            sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSize))
+            
+            wx.Bitmap.Rescale(tempBmp, sizeNeeded)
+
+            print("editUndo")
+            self.staticbitmap2.SetBitmap(tempBmp)
+            self.bitmapForMap = self.staticbitmap2.GetBitmap()
 
     def ShowHelp(self, e):
         dlg = ShowHelpDialog(parent = self.panel)
