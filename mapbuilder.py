@@ -835,6 +835,12 @@ class windowCreateImgBlock(wx.Frame):
             
             self.staticbitmap.SetBitmap(self.bitmapForMap)
             self.staticbitmap.Refresh()
+            ###############################ADD STUFF FOR RESETTING MAGNIFY
+            self.magnifyVal = 0
+            self.realMagnifyVal = 2 ** self.magnifyVal
+            self.magnifyInput.Clear()
+            self.magnifyInput.AppendText(str(self.magnifyVal))
+            #self.onChangeMagnify()
 
             global isConfigSet2
             if isConfigSet2 == False:
