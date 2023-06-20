@@ -615,6 +615,11 @@ class windowCreateImgBlock(wx.Frame):
         dc.SetBrush(wx.Brush('#FFFFFF'))
         dc.DrawRectangle(0, 0, width=int(self.x_totalSize), height=int(self.y_totalSize))
 
+        self.colorMap2DArr = [['h' for x in range(int(self.x_totalSize))] for y in range(int(self.y_totalSize))]
+        self.initColorMap2DArr(val1=int(self.x_totalSize), val2=int(self.y_totalSize), color="#FFFFFF")
+        print(self.colorMap2DArr)
+        print("1**1")
+
         self.staticbitmap.SetBitmap(self.bitmapForMap)
 
         self.panel.addToBoxSizerVbox(self.staticbitmap)
@@ -628,6 +633,12 @@ class windowCreateImgBlock(wx.Frame):
 
         self.xintervals = int(self.x_totalSize)
         self.yintervals = int(self.y_totalSize)
+
+        self.colorMap2DArr = [['h' for x in range(self.xintervals)] for y in range(self.yintervals)]
+        self.initColorMap2DArr(val1=self.xintervals, val2=self.yintervals, color="#E5CCFF")
+        print("after func: ")
+        print(self.colorMap2DArr)
+        print("2**2")
 
         print(f"xintervals: {self.xintervals} and yintervals: {self.yintervals}")
         self.map_2d_arr = [[0 for x in range(self.xintervals)] for y in range(self.yintervals)]
@@ -908,7 +919,7 @@ class windowCreateImgBlock(wx.Frame):
         self.onReleaseFunc(event2=event, option=0)
 
     def on_clicMatrix(self, event : wx.MouseEvent):
-        
+
         selectedColor = self.getColorLeftRightClick(evt=event)
         
         x, y = event.GetPosition()
@@ -924,6 +935,7 @@ class windowCreateImgBlock(wx.Frame):
             dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
             match self.drawingAction:
                 case "Draw":
+                    print(f"draw1 ({x}, {y})\n")
                     point = wx.Point(x, y)
                     dc.DrawPoint(point)
                     print("draw\n")
@@ -940,6 +952,9 @@ class windowCreateImgBlock(wx.Frame):
             dc.SetBrush(wx.Brush(selectedColor))
             dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
             dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
+            val1 = (xVal*pxSize2)
+            val2 = (yVal*pxSize2)
+            print(f"draw rect ({val1}, {val2})\n")
             
         self.staticbitmap.SetBitmap(self.bitmapForMap) 
         global drawBool
@@ -966,6 +981,7 @@ class windowCreateImgBlock(wx.Frame):
             #pxSize : int = self.matrixModePxSize
 
             dc = wx.MemoryDC(self.bitmapForMap)
+
 
             if pxSize == 0:
                 dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
@@ -1127,6 +1143,7 @@ class windowCreateImgBlock(wx.Frame):
 
         drawBool = False
         print("herehere\n")
+        self.staticbitmap.SetBitmap(self.bitmapForMap)
         self.staticbitmap.Refresh()
         event2.Skip()
 
@@ -1263,6 +1280,15 @@ class windowCreateImgBlock(wx.Frame):
             print("rightclick")
             selectedColor2= self.selectedColorRight
         return selectedColor2
+    
+    def initColorMap2DArr(self, val1 : int, val2 : int, color : str):
+        print("before func: ")
+        print(self.colorMap2DArr)
+        for i in range(0, val1):
+            for j in range(0, val2):
+                #print(str(i) + " " + str(j) )
+                self.colorMap2DArr[j][i] = color
+
 
     def Quit(self, e):
         self.Close()
