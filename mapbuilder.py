@@ -92,6 +92,7 @@ class windowClass(wx.Frame):
         
         self.staticbitmap2.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
         self.staticbitmap2.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
+        self.staticbitmap2.Bind(wx.EVT_LEAVE_WINDOW, self.mouse_leaveWindow)
         self.staticbitmap2.Bind(wx.EVT_LEFT_UP, self.on_release)
 
         self.SetTitle('Simple Map Builder')
@@ -374,16 +375,22 @@ class windowClass(wx.Frame):
 
         event.Skip()
 
+    def mouse_leaveWindow(self, event2 : wx.EVT_LEAVE_WINDOW):
+        self.on_release(event=event2)
+
     def on_release(self, event : wx.MouseEvent):
         global drawBool
-        drawBool = False
         print("herehere\n")
+        #self.staticbitmap2.SetBitmap(self.bitmapForMap)
         self.staticbitmap2.Refresh()
 
-        if len(self.redo_list2) > 0:
-            self.redo_list2.clear()
-        self.undo_list2.append(self.staticbitmap2.GetBitmap())
-        self.undo_list_index2 += 1
+        if drawBool:
+            if len(self.redo_list2) > 0:
+                self.redo_list2.clear()
+            self.undo_list2.append(self.staticbitmap2.GetBitmap())
+            self.undo_list_index2 += 1
+        
+        drawBool = False
         event.Skip()
     
     def editRedo(self, e):
@@ -464,12 +471,14 @@ class windowCreateImgBlock(wx.Frame):
             self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
             self.staticbitmap.Bind(wx.EVT_RIGHT_DOWN, self.on_clic)
             self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
+            self.staticbitmap.Bind(wx.EVT_LEAVE_WINDOW, self.mouse_leaveWindow)
             self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_release)
             self.staticbitmap.Bind(wx.EVT_RIGHT_UP, self.on_release)
         else: #this is for matrix mode
             self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clicMatrix)
             self.staticbitmap.Bind(wx.EVT_RIGHT_DOWN, self.on_clicMatrix)
             self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_eventsMatrix)
+            self.staticbitmap.Bind(wx.EVT_LEAVE_WINDOW, self.mouse_leaveWindow)
             self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_releaseMatrix)
             self.staticbitmap.Bind(wx.EVT_RIGHT_UP, self.on_releaseMatrix)
             
@@ -1072,6 +1081,30 @@ class windowCreateImgBlock(wx.Frame):
 
     def on_releaseMatrix(self, event : wx.MouseEvent):
         self.onReleaseFunc(event2=event, option=1)
+
+    def mouse_leaveWindow(self, event : wx.EVT_LEAVE_WINDOW):
+        global drawBool
+
+        global leftColorTrue
+        leftColorTrue = False
+
+        if drawBool:
+            if len(self.redo_list) > 0:
+                self.redo_list.clear()
+
+            self.undo_list.append(self.staticbitmap.GetBitmap())
+            self.undo_list_index += 1
+
+            print(self.undo_list)
+            print(self.undo_list_index)
+        
+        drawBool = False
+
+        self.staticbitmap.SetBitmap(self.bitmapForMap)
+        self.staticbitmap.Refresh()
+        event.Skip()
+
+        print("out of bounds!")
 
     def onEraseCheckbox(self, event : wx.EVT_CHECKBOX):
         if event.IsChecked():
