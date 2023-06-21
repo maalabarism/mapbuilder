@@ -995,7 +995,7 @@ class windowCreateImgBlock(wx.Frame):
         
         dc = wx.MemoryDC(self.bitmapForMap)
 
-        print(f"hi x: {x} y: {y}\n")
+        print(f"hi x: {x} y: {y} two\n")
         #pxSize : int = self.matrixModePxSize
         pxSize : int = self.magnifyVal
         pxSize2 : int = self.realMagnifyVal
@@ -1026,6 +1026,7 @@ class windowCreateImgBlock(wx.Frame):
             print(f"draw rect ({val1}, {val2})\n")
             
         self.staticbitmap.SetBitmap(self.bitmapForMap) 
+        self.staticbitmap.Refresh()
         global drawBool
         drawBool = True
         event.Skip()
@@ -1075,12 +1076,14 @@ class windowCreateImgBlock(wx.Frame):
                         print("line2\n")
                     case "Fill":
                         print("fill2\n")
-
+            
             self.staticbitmap.SetBitmap(self.bitmapForMap)
+            self.staticbitmap.Refresh()
         event.Skip()
 
     def on_releaseMatrix(self, event : wx.MouseEvent):
         self.onReleaseFunc(event2=event, option=1)
+        print("release")
 
     def mouse_leaveWindow(self, event : wx.EVT_LEAVE_WINDOW):
         global drawBool
