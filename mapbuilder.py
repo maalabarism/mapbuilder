@@ -993,7 +993,6 @@ class windowCreateImgBlock(wx.Frame):
         #dc = wx.PaintDC(self)
         #dc.DrawBitmap(self.bitmapForMap, wx.Point(x, y))
         self.staticbitmap.SetBitmap(self.bitmapForMap)
-        self.staticbitmap2.SetBitmap(self.bitmapForMap)
 
         global drawBool
         drawBool = True
@@ -1030,7 +1029,6 @@ class windowCreateImgBlock(wx.Frame):
             #dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
             #dc.DrawBitmap(self.bitmapForMap, wx.Point(x, y))
             self.staticbitmap.SetBitmap(self.bitmapForMap)
-            self.staticbitmap2.SetBitmap(self.bitmapForMap)
 
         event.Skip()
 
@@ -1083,9 +1081,7 @@ class windowCreateImgBlock(wx.Frame):
         dc.SelectObject(wx.NullBitmap)
             
         self.staticbitmap.SetBitmap(self.bitmapForMap)
-        self.staticbitmap2.SetBitmap(self.bitmapForMap)
         self.staticbitmap.Refresh()
-        self.staticbitmap2.Refresh()
         global drawBool
         drawBool = True
         event.Skip()
@@ -1138,9 +1134,7 @@ class windowCreateImgBlock(wx.Frame):
             dc.SelectObject(wx.NullBitmap)
             
             self.staticbitmap.SetBitmap(self.bitmapForMap)
-            self.staticbitmap2.SetBitmap(self.bitmapForMap)
             self.staticbitmap.Refresh()
-            self.staticbitmap2.Refresh()
         event.Skip()
 
     def on_releaseMatrix(self, event : wx.MouseEvent):
