@@ -1225,6 +1225,8 @@ class windowCreateImgBlock(wx.Frame):
         self.bitmapForMap = tempBitmap2
         self.staticbitmap.Refresh()
         self.staticbitmap2.Refresh()
+        self.panel.SetupScrolling()
+
         #if self.drawingMode == "Matrix Mode":
             #self.matrixModePxSize = int(self.magnifyInput.GetValue())
     
