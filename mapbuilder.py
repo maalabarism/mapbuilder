@@ -2,6 +2,7 @@
 import wx
 import wx.lib.scrolledpanel as scrolled
 #import wx.lib.inspection
+import wx.lib.statbmp
 import base64
 from io import BytesIO
 import os
@@ -15,6 +16,8 @@ drawBool = False
 drawBool2 = False
 drawLineBool = False
 destroyCreateBlockWindow = False
+eraseBackground = False
+globalBmp : wx.Bitmap = None
 
 leftColorTrue = False
 
@@ -467,7 +470,7 @@ class windowCreateImgBlock(wx.Frame):
         self.basicGUI()
         self.getDrawingModeDialog(self)
 
-        if(self.drawingMode == "Painting Mode"): #Check drawing mode and init variables.
+        '''if(self.drawingMode == "Painting Mode"): #Check drawing mode and init variables.
             self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
             self.staticbitmap.Bind(wx.EVT_RIGHT_DOWN, self.on_clic)
             self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
@@ -480,7 +483,7 @@ class windowCreateImgBlock(wx.Frame):
             self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_eventsMatrix)
             self.staticbitmap.Bind(wx.EVT_LEAVE_WINDOW, self.mouse_leaveWindow)
             self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_releaseMatrix)
-            self.staticbitmap.Bind(wx.EVT_RIGHT_UP, self.on_releaseMatrix)
+            self.staticbitmap.Bind(wx.EVT_RIGHT_UP, self.on_releaseMatrix)'''
             
         self.magnifyInput = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(30,30), value=self.magnifyValStr)
         #self.magnifyInput2 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(50,30), value=defaultMagnifySize2, style = wx.TE_MULTILINE | wx.TE_READONLY)
@@ -545,7 +548,10 @@ class windowCreateImgBlock(wx.Frame):
         self.panel.addToBoxSizerHbox(self.log1)
         self.panel.setSizerAndScrolling()
         
-        self.staticbitmap = wx.StaticBitmap(self.panel, pos=(10, 60))#this function has position, it is for selected image displayed.
+        #self.staticbitmap = wx.StaticBitmap(self.panel, pos=(10, 60))#this function has position, it is for selected image displayed.
+        #self.staticbitmap = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60))
+        #self.genstaticbitmap = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=-1, pos=(10, 60))
+
         self.tempStaticBitmap = wx.StaticBitmap(self.panel, pos=(10, 60))#this function has position, it is for selected image displayed.
         self.tempBitmap = wx.Bitmap()
 
@@ -661,16 +667,52 @@ class windowCreateImgBlock(wx.Frame):
 
             if(self.drawingMode == "Painting Mode"):
                 self.displayMap2(self)
-                self.undo_list.append(self.staticbitmap.GetBitmap())
+                self.initGenStaticBitmapBindings(self)
+                bmp = self.staticbitmap.GetBitmap()
+                self.staticbitmap2.SetBitmap(bmp)
+                self.staticbitmap2.Refresh()
+                self.undo_list.append(self.staticbitmap2.GetBitmap())
+                print("undo list1:\n")
+                print(self.undo_list)
                 dlg.Destroy()
             else:
                 self.displayMapForMatrix(self)
-                self.undo_list.append(self.staticbitmap.GetBitmap())
+                self.initGenStaticBitmapBindings(self)
+                bmp = self.staticbitmap.GetBitmap()
+                self.staticbitmap2.SetBitmap(bmp)
+                self.staticbitmap2.Refresh()
+                self.undo_list.append(self.staticbitmap2.GetBitmap())
+                print("undo list1:\n")
+                print(self.undo_list)
                 dlg.Destroy()
             
         else:
             global destroyCreateBlockWindow
             destroyCreateBlockWindow = True
+        
+    def initGenStaticBitmapBindings(self, e):
+        if(self.drawingMode == "Painting Mode"): #Check drawing mode and init variables.
+            self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
+            self.staticbitmap.Bind(wx.EVT_RIGHT_DOWN, self.on_clic)
+            self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
+            self.staticbitmap.Bind(wx.EVT_LEAVE_WINDOW, self.mouse_leaveWindow)
+            self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_release)
+            self.staticbitmap.Bind(wx.EVT_RIGHT_UP, self.on_release)
+            self.staticbitmap.Bind(wx.EVT_ERASE_BACKGROUND, self.onEraseBackGround)
+        else: #this is for matrix mode
+            self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clicMatrix)
+            self.staticbitmap.Bind(wx.EVT_RIGHT_DOWN, self.on_clicMatrix)
+            self.staticbitmap.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_eventsMatrix)
+            self.staticbitmap.Bind(wx.EVT_LEAVE_WINDOW, self.mouse_leaveWindow)
+            self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_releaseMatrix)
+            self.staticbitmap.Bind(wx.EVT_RIGHT_UP, self.on_releaseMatrix)
+            self.staticbitmap.Bind(wx.EVT_ERASE_BACKGROUND, self.onEraseBackGround)
+
+    def onEraseBackGround(self, event : wx.EVT_ERASE_BACKGROUND):
+        global eraseBackground
+        if eraseBackground:
+            print("erasingBackground!\n")
+            eraseBackground = False
 
     def displayMap2(self, e): #This is for Painting Mode
         self.bitmapForMap = wx.Bitmap(width=int(self.x_totalSize), height=int(self.y_totalSize))
@@ -683,7 +725,11 @@ class windowCreateImgBlock(wx.Frame):
         print(self.colorMap2DArr)
         print("1**1")
 
+        self.staticbitmap = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+        self.staticbitmap2 = wx.StaticBitmap(self.panel, pos=(10, 60))#this function has position, it is for selected image displayed.
+        self.staticbitmap2.Hide()
         self.staticbitmap.SetBitmap(self.bitmapForMap)
+        self.staticbitmap2.SetBitmap(self.bitmapForMap)
 
         self.panel.addToBoxSizerVbox(self.staticbitmap)
         self.panel.setupScrolling()
@@ -722,7 +768,11 @@ class windowCreateImgBlock(wx.Frame):
             for y in range(self.yintervals):
                  dc.DrawRectangle(x * pxSize, y * pxSize, width = pxSize, height = pxSize)
         
+        self.staticbitmap = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+        self.staticbitmap2 = wx.StaticBitmap(self.panel, pos=(10, 60))#this function has position, it is for selected image displayed.
+        self.staticbitmap2.Hide()
         self.staticbitmap.SetBitmap(self.bitmapForMap)
+        self.staticbitmap2.SetBitmap(self.bitmapForMap)
 
         #self.panel.vbox.Detach(self.staticbitmap2)
         self.panel.addToBoxSizerVbox(self.staticbitmap)
@@ -936,11 +986,14 @@ class windowCreateImgBlock(wx.Frame):
             point = wx.Point(x, y)
             dc.DrawPoint(point)
 
+        
+        dc.SelectObject(wx.NullBitmap)
         #dc = wx.MemoryDC(self.bitmapForMap)
         #dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
         #dc = wx.PaintDC(self)
         #dc.DrawBitmap(self.bitmapForMap, wx.Point(x, y))
         self.staticbitmap.SetBitmap(self.bitmapForMap)
+        self.staticbitmap2.SetBitmap(self.bitmapForMap)
 
         global drawBool
         drawBool = True
@@ -972,10 +1025,12 @@ class windowCreateImgBlock(wx.Frame):
                 dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
                 point = wx.Point(x, y)
                 dc.DrawPoint(point)
-
+            
+            dc.SelectObject(wx.NullBitmap)
             #dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
             #dc.DrawBitmap(self.bitmapForMap, wx.Point(x, y))
             self.staticbitmap.SetBitmap(self.bitmapForMap)
+            self.staticbitmap2.SetBitmap(self.bitmapForMap)
 
         event.Skip()
 
@@ -1024,9 +1079,13 @@ class windowCreateImgBlock(wx.Frame):
             val1 = (xVal*pxSize2)
             val2 = (yVal*pxSize2)
             print(f"draw rect ({val1}, {val2})\n")
+        
+        dc.SelectObject(wx.NullBitmap)
             
-        self.staticbitmap.SetBitmap(self.bitmapForMap) 
+        self.staticbitmap.SetBitmap(self.bitmapForMap)
+        self.staticbitmap2.SetBitmap(self.bitmapForMap)
         self.staticbitmap.Refresh()
+        self.staticbitmap2.Refresh()
         global drawBool
         drawBool = True
         event.Skip()
@@ -1075,10 +1134,13 @@ class windowCreateImgBlock(wx.Frame):
                     case "Line":
                         print("line2\n")
                     case "Fill":
-                        print("fill2\n")
+                        print("fill2\n")            
+            dc.SelectObject(wx.NullBitmap)
             
             self.staticbitmap.SetBitmap(self.bitmapForMap)
+            self.staticbitmap2.SetBitmap(self.bitmapForMap)
             self.staticbitmap.Refresh()
+            self.staticbitmap2.Refresh()
         event.Skip()
 
     def on_releaseMatrix(self, event : wx.MouseEvent):
@@ -1095,7 +1157,10 @@ class windowCreateImgBlock(wx.Frame):
             if len(self.redo_list) > 0:
                 self.redo_list.clear()
 
-            self.undo_list.append(self.staticbitmap.GetBitmap())
+            bmp = self.staticbitmap.GetBitmap()
+            self.staticbitmap2.SetBitmap(bmp)
+            self.staticbitmap2.Refresh()
+            self.undo_list.append(self.staticbitmap2.GetBitmap())
             self.undo_list_index += 1
 
             print(self.undo_list)
@@ -1104,7 +1169,9 @@ class windowCreateImgBlock(wx.Frame):
         drawBool = False
 
         self.staticbitmap.SetBitmap(self.bitmapForMap)
+        self.staticbitmap2.SetBitmap(self.bitmapForMap)
         self.staticbitmap.Refresh()
+        self.staticbitmap2.Refresh()
         event.Skip()
 
         print("out of bounds!")
@@ -1160,8 +1227,10 @@ class windowCreateImgBlock(wx.Frame):
         wx.Bitmap.Rescale(tempBitmap2, sizeNeeded)
 
         self.staticbitmap.SetBitmap(tempBitmap2)
+        self.staticbitmap2.SetBitmap(tempBitmap2)
         self.bitmapForMap = tempBitmap2
         self.staticbitmap.Refresh()
+        self.staticbitmap2.Refresh()
         #if self.drawingMode == "Matrix Mode":
             #self.matrixModePxSize = int(self.magnifyInput.GetValue())
     
@@ -1188,6 +1257,7 @@ class windowCreateImgBlock(wx.Frame):
                         dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
                         point = wx.Point(x, y)
                         dc.DrawPoint(point)
+                        dc.SelectObject(wx.NullBitmap)
                     else:
                         self.pos1Line = event2.GetPosition()
                         self.xintervals = int(self.x_totalSize)
@@ -1201,6 +1271,7 @@ class windowCreateImgBlock(wx.Frame):
                         dc.SetBrush(wx.Brush(selectedColor))
                         dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
                         dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
+                        dc.SelectObject(wx.NullBitmap)
                         '''self.pos1Line = event2.GetPosition()
                         x, y = event2.GetPosition()
                         dc = wx.MemoryDC(self.bitmapForMap)
@@ -1215,12 +1286,14 @@ class windowCreateImgBlock(wx.Frame):
                         dc = wx.MemoryDC(self.bitmapForMap)
                         dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
                         dc.DrawLine(self.pos1Line[0], self.pos1Line[1], self.pos2Line[0], self.pos2Line[1])
+                        dc.SelectObject(wx.NullBitmap)
                     else:
                         self.pos2Line = event2.GetPosition()
                         self.DrawLineForMagnifiedBmp(pos1=self.pos1Line, pos2=self.pos2Line)
                     drawLineBool = False
                 
                 self.staticbitmap.SetBitmap(self.bitmapForMap)
+                self.staticbitmap2.SetBitmap(self.bitmapForMap)
                 print("line3\n")
             case "Fill":
                 print("fill3\n")
@@ -1231,7 +1304,10 @@ class windowCreateImgBlock(wx.Frame):
         if len(self.redo_list) > 0:
             self.redo_list.clear()
 
-        self.undo_list.append(self.staticbitmap.GetBitmap())
+        bmp = self.staticbitmap.GetBitmap()
+        self.staticbitmap2.SetBitmap(bmp)
+        self.staticbitmap2.Refresh()
+        self.undo_list.append(self.staticbitmap2.GetBitmap())
         self.undo_list_index += 1
 
         print(self.undo_list)
@@ -1240,7 +1316,9 @@ class windowCreateImgBlock(wx.Frame):
         drawBool = False
         print("herehere\n")
         self.staticbitmap.SetBitmap(self.bitmapForMap)
+        self.staticbitmap2.SetBitmap(self.bitmapForMap)
         self.staticbitmap.Refresh()
+        self.staticbitmap2.Refresh()
         event2.Skip()
 
     def DrawLineForMagnifiedBmp(self, pos1, pos2):
@@ -1333,37 +1411,57 @@ class windowCreateImgBlock(wx.Frame):
                     xVal, yVal = getCoordinatesFromBmp(x1=valueRounded, y1=value, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2=pxSize2)
                 dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
 
-    def editRedo(self, e):
+    def editRedo(self, e : wx.EVT_MENU):
         if len(self.redo_list) > 0:
-            bmp = self.redo_list.pop()
+            bmp : wx.Bitmap= self.redo_list.pop()
 
             self.undo_list.append(bmp)
             self.undo_list_index += 1
+            print(f"undo_list_index: {self.undo_list_index}")
 
             sizeNeeded : wx.Size = wx.Size(self.realMagnifyVal * int(self.x_totalSize), self.realMagnifyVal * int(self.y_totalSize))
             wx.Bitmap.Rescale(bmp, sizeNeeded)
 
-            self.staticbitmap.SetBitmap(bmp)
+            self.bitmapForMap : wx.Bitmap = bmp
+            
+            #self.staticbitmap.Destroy()
+            #self.staticbitmap = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=bmp)
+
+            self.staticbitmap2.SetBitmap(self.bitmapForMap)
+            self.staticbitmap2.Refresh()
+            bmpbmp = self.staticbitmap2.GetBitmap()
+            self.staticbitmap.SetBitmap(bmpbmp)
             self.bitmapForMap = self.staticbitmap.GetBitmap()
 
-        print("editRedo")
+            print("editRedo")
     
-    def editUndo(self, e):
+    def editUndo(self, e : wx.EVT_MENU):
         if len(self.undo_list) > 1:
             removedItem = self.undo_list.pop(self.undo_list_index)
 
             self.redo_list.append(removedItem)
 
             self.undo_list_index -= 1
+            print(f"undo_list_index: {self.undo_list_index}")
             tempBmp : wx.Bitmap = self.undo_list[self.undo_list_index]
 
             sizeNeeded : wx.Size = wx.Size(self.realMagnifyVal * int(self.x_totalSize), self.realMagnifyVal * int(self.y_totalSize))
             
             wx.Bitmap.Rescale(tempBmp, sizeNeeded)
 
-            print("editUndo")
-            self.staticbitmap.SetBitmap(tempBmp)
+            self.bitmapForMap : wx.Bitmap = tempBmp
+            
+            #self.staticbitmap.Destroy()
+            #self.staticbitmap = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=tempBmp)
+
+            self.staticbitmap2.SetBitmap(self.bitmapForMap)
+            self.staticbitmap2.Refresh()
+            bmpbmp = self.staticbitmap2.GetBitmap()
+            self.staticbitmap.SetBitmap(bmpbmp)
+            #self.bitmapForMap = tempBmp
             self.bitmapForMap = self.staticbitmap.GetBitmap()
+            print("editUndo")
+            
 
     def getColorLeftRightClick(self, evt):
         evtType = evt.GetEventType()
@@ -1384,7 +1482,6 @@ class windowCreateImgBlock(wx.Frame):
             for j in range(0, val2):
                 #print(str(i) + " " + str(j) )
                 self.colorMap2DArr[j][i] = color
-
 
     def Quit(self, e):
         self.Close()
