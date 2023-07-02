@@ -78,7 +78,8 @@ class windowClass(wx.Frame):
         menuBar.Append(editButton, '&Edit')
         menuBar.Append(helpButton, '&Help')
         
-        self.staticbitmap2 = wx.StaticBitmap(self.panel, pos=(10, 60))#this function has position, it is for selected image displayed.
+        self.staticbitmap3 = wx.StaticBitmap(self.panel, pos=(10, 60))#this function has position, it is for selected image displayed.
+        self.staticbitmap3.Hide()
         self.SetMenuBar(menuBar)
 
         self.Bind(wx.EVT_MENU, self.OpenProject, openProjectItem)
@@ -93,10 +94,6 @@ class windowClass(wx.Frame):
         self.Bind(wx.EVT_MENU, self.editRedo, redoItem)
         self.Bind(wx.EVT_MENU, self.editUndo, undoItem)
         
-        self.staticbitmap2.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
-        self.staticbitmap2.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
-        self.staticbitmap2.Bind(wx.EVT_LEAVE_WINDOW, self.mouse_leaveWindow)
-        self.staticbitmap2.Bind(wx.EVT_LEFT_UP, self.on_release)
 
         self.SetTitle('Simple Map Builder')
         
@@ -217,6 +214,7 @@ class windowClass(wx.Frame):
         bitmap = img.ConvertToBitmap()
 
         self.bitmapForMap = wx.Bitmap(width=int(self.x_totalSize), height=int(self.y_totalSize))
+
         dc = wx.MemoryDC(self.bitmapForMap)
         dc.DrawBitmap(bitmap, x=0, y=0)
         
@@ -297,7 +295,10 @@ class windowClass(wx.Frame):
         
         if dlg.isDataThere:
             self.displayMap(self)
-            self.undo_list2.append(self.staticbitmap2.GetBitmap())
+            bmp = self.staticbitmap2.GetBitmap()
+            self.staticbitmap3.SetBitmap(bmp)
+            self.staticbitmap3.Refresh()
+            self.undo_list2.append(self.staticbitmap3.GetBitmap())
         
         #self.log2 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(0, 60), size=(int(dlg.x_totalSize), int(dlg.y_totalSize)), style = wx.TE_MULTILINE | wx.VSCROLL)
         dlg.Destroy()
@@ -310,6 +311,14 @@ class windowClass(wx.Frame):
         print(self.map_2d_arr)
         
         self.bitmapForMap = wx.Bitmap(width=int(self.x_totalSize), height=int(self.y_totalSize))
+        
+        self.staticbitmap2 = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+        
+        self.staticbitmap2.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
+        self.staticbitmap2.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
+        self.staticbitmap2.Bind(wx.EVT_LEAVE_WINDOW, self.mouse_leaveWindow)
+        self.staticbitmap2.Bind(wx.EVT_LEFT_UP, self.on_release)
+
         dc = wx.MemoryDC(self.bitmapForMap)
         dc.SetBrush(wx.Brush('#E5CCFF'))
         dc.DrawRectangle(0, 0, width=int(self.x_totalSize), height=int(self.y_totalSize))
@@ -390,7 +399,10 @@ class windowClass(wx.Frame):
         if drawBool:
             if len(self.redo_list2) > 0:
                 self.redo_list2.clear()
-            self.undo_list2.append(self.staticbitmap2.GetBitmap())
+            bmp = self.staticbitmap2.GetBitmap()
+            self.staticbitmap3.SetBitmap(bmp)
+            self.staticbitmap3.Refresh()
+            self.undo_list2.append(self.staticbitmap3.GetBitmap())
             self.undo_list_index2 += 1
         
         drawBool = False
@@ -406,7 +418,12 @@ class windowClass(wx.Frame):
             sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSize))
             wx.Bitmap.Rescale(bmp, sizeNeeded)
 
-            self.staticbitmap2.SetBitmap(bmp)
+            
+            self.staticbitmap3.SetBitmap(bmp)
+            self.staticbitmap3.Refresh()
+            bmpbmp = self.staticbitmap3.GetBitmap()
+            self.staticbitmap2.SetBitmap(bmpbmp)
+
             self.bitmapForMap = self.staticbitmap2.GetBitmap()
 
         print("editRedo")
@@ -425,7 +442,11 @@ class windowClass(wx.Frame):
             wx.Bitmap.Rescale(tempBmp, sizeNeeded)
 
             print("editUndo")
-            self.staticbitmap2.SetBitmap(tempBmp)
+            self.staticbitmap3.SetBitmap(tempBmp)
+            self.staticbitmap3.Refresh()
+            bmpbmp = self.staticbitmap3.GetBitmap()
+            self.staticbitmap2.SetBitmap(bmpbmp)
+
             self.bitmapForMap = self.staticbitmap2.GetBitmap()
 
     def ShowHelp(self, e):
