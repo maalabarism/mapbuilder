@@ -1825,13 +1825,20 @@ class TestPanel(scrolled.ScrolledPanel):
 
 def getCoordinatesFromBmp(x1, y1, xintervals, yintervals, arg1, arg2): # global function.
     for x2 in range(xintervals):
+        if x1 in range(x2*arg1, arg1*(x2+1)):
+            xVal2 = x2
+    for y2 in range(yintervals):
+        if y1 in range(y2*arg2, arg2*(y2+1)):
+            yVal2 = y2
+    return xVal2, yVal2
+    '''for x2 in range(xintervals):
         for y2 in range(yintervals):
             if x1 in range(x2*arg1, arg1*(x2+1)):
                 if y1 in range(y2*arg2, arg2*(y2+1)):
                     #print(f"here x2: {x2} and y2: {y2}")
                     xVal2 = x2
                     yVal2 = y2
-    return xVal2, yVal2
+    return xVal2, yVal2'''
 
 def main():
     app = wx.App()
