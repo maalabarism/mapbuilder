@@ -9,11 +9,15 @@ import os
 #import time
 
 #global variables:
+doesStaticMapExist = False
+doesStaticImgBlockExist = False
 isConfigSet = False
 isConfigSet2 = False
 isSelectedImageSet = False
 drawBool = False
 drawBool2 = False
+isThereMap = False
+isThereImgBlock = False
 drawLineBool = False
 destroyCreateBlockWindow = False
 eraseBackground = False
@@ -222,7 +226,13 @@ class windowClass(wx.Frame):
             self.staticbitmap2.SetBitmap(self.bitmapForMap)
             self.staticbitmap2.Refresh()
         except:
-            self.staticbitmap2 = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+            global doesStaticMapExist
+            if doesStaticMapExist:
+                self.staticbitmap2.Destroy()
+                self.staticbitmap2 = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+            else:
+                self.staticbitmap2 = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+                doesStaticMapExist = True
             
             self.staticbitmap2.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
             self.staticbitmap2.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
@@ -247,51 +257,68 @@ class windowClass(wx.Frame):
             self.panel.addToBoxSizerVbox(self.staticbitmap2)
             self.panel.setupScrolling()
         
+        global isThereMap
+        isThereMap = True
+        
 
     def SaveFile(self, event):
-        defaultpath = '.'
+        global isThereMap
         
-        openFileDialog = wx.FileDialog(self, message="Save file as...", defaultDir=defaultpath, wildcard="PNG files (*.png)|*.png")
-        if openFileDialog.ShowModal() == wx.ID_CANCEL:
-            return
-        # save the current contents in the file
-        pathname = openFileDialog.GetPath()
-        savedImageBitmap : wx.Bitmap = self.staticbitmap2.GetBitmap()
-        savedImage : wx.Image = savedImageBitmap.ConvertToImage()
-        savedImage.SaveFile(pathname, type=wx.BITMAP_TYPE_PNG)
-        openFileDialog.Destroy()
+        if isThereMap == False:
+            print("error there is no active img block.")
+            dlg = ErrorDialog(parent = self.panel, option=0)
+            dlg.ShowModal()
+            dlg.Destroy()
+        else:
+            defaultpath = '.'
+            
+            openFileDialog = wx.FileDialog(self, message="Save file as...", defaultDir=defaultpath, wildcard="PNG files (*.png)|*.png")
+            if openFileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+            # save the current contents in the file
+            pathname = openFileDialog.GetPath()
+            savedImageBitmap : wx.Bitmap = self.staticbitmap2.GetBitmap()
+            savedImage : wx.Image = savedImageBitmap.ConvertToImage()
+            savedImage.SaveFile(pathname, type=wx.BITMAP_TYPE_PNG)
+            openFileDialog.Destroy()
 
     def SaveProject(self, event):
-        defaultpath = '.'
+        global isThereMap
+        if isThereMap == False:
+            print("error there is no active img block.")
+            dlg = ErrorDialog(parent = self.panel, option=0)
+            dlg.ShowModal()
+            dlg.Destroy()
+        else:
+            defaultpath = '.'
 
-        openFileDialog = wx.FileDialog(self, message="Save project as...", defaultDir=defaultpath, wildcard="SMP files (*.smp)|*.smp", style=wx.FD_SAVE)
-        if openFileDialog.ShowModal() == wx.ID_CANCEL:
-            return
-        # save the current contents in the file
-        pathname = openFileDialog.GetPath()
-        savedImageBitmap : wx.Bitmap = self.staticbitmap2.GetBitmap()
-        savedImage : wx.Image = savedImageBitmap.ConvertToImage()
-        savedImage.SaveFile(pathname, type=wx.BITMAP_TYPE_PNG)
-        
-        with open(pathname, "rb") as image_file:
-            data = base64.b64encode(image_file.read())
+            openFileDialog = wx.FileDialog(self, message="Save project as...", defaultDir=defaultpath, wildcard="SMP files (*.smp)|*.smp", style=wx.FD_SAVE)
+            if openFileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+            # save the current contents in the file
+            pathname = openFileDialog.GetPath()
+            savedImageBitmap : wx.Bitmap = self.staticbitmap2.GetBitmap()
+            savedImage : wx.Image = savedImageBitmap.ConvertToImage()
+            savedImage.SaveFile(pathname, type=wx.BITMAP_TYPE_PNG)
+            
+            with open(pathname, "rb") as image_file:
+                data = base64.b64encode(image_file.read())
 
-        #f = open("C:\\Users\\change\\source\\Python\\mapbuilder\\test.smp", "w")
-        f = open(pathname, "w")
-        str1 = str(self.result_x_dir) + "\n"
-        str2 = str(self.result_y_dir) + "\n"
-        str3 = str(self.x_totalSize) + "\n"
-        str4 = str(self.y_totalSize) + "\n"
-        f.write(str1)
-        f.write(str2)
-        f.write(str3)
-        f.write(str4)
-        datastr = data.decode("utf-8")
-        f.write(datastr)
-        
-        #os.remove(pathname)
-        openFileDialog.Destroy()
-
+            #f = open("C:\\Users\\change\\source\\Python\\mapbuilder\\test.smp", "w")
+            f = open(pathname, "w")
+            str1 = str(self.result_x_dir) + "\n"
+            str2 = str(self.result_y_dir) + "\n"
+            str3 = str(self.x_totalSize) + "\n"
+            str4 = str(self.y_totalSize) + "\n"
+            f.write(str1)
+            f.write(str2)
+            f.write(str3)
+            f.write(str4)
+            datastr = data.decode("utf-8")
+            f.write(datastr)
+            
+            #os.remove(pathname)
+            openFileDialog.Destroy()
 
     def Config(self, e):
         dlg = GetData(parent = self.panel)
@@ -304,10 +331,6 @@ class windowClass(wx.Frame):
                 self.result_y_dir = dlg.result_y_dir
                 self.x_totalSize = dlg.x_totalSize
                 self.y_totalSize = dlg.y_totalSize
-            else:
-               self.log1.AppendText("No input found\n")
-        else:
-            self.log1.AppendText("No input found\n")
         
         if dlg.isDataThere:
             self.displayMap(self)
@@ -328,7 +351,13 @@ class windowClass(wx.Frame):
         
         self.bitmapForMap = wx.Bitmap(width=int(self.x_totalSize), height=int(self.y_totalSize))
         
-        self.staticbitmap2 = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+        global doesStaticMapExist
+        if doesStaticMapExist:
+            self.staticbitmap2.Destroy()
+            self.staticbitmap2 = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+        else:
+            self.staticbitmap2 = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+            doesStaticMapExist = True
         
         self.staticbitmap2.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
         self.staticbitmap2.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
@@ -357,6 +386,9 @@ class windowClass(wx.Frame):
         self.staticbitmap2.Refresh()
         self.staticbitmap2.SetBitmap(self.bitmapForMap)
         self.staticbitmap2.Refresh()
+
+        global isThereMap
+        isThereMap = True
 
         
     def on_clic(self, event : wx.MouseEvent):
@@ -763,7 +795,13 @@ class windowCreateImgBlock(wx.Frame):
         print(self.colorMap2DArr)
         print("1**1")
 
-        self.staticbitmap = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+        global doesStaticImgBlockExist
+        if doesStaticImgBlockExist:
+            self.staticbitmap.Destroy()
+            self.staticbitmap = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+        else:
+            self.staticbitmap = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+            doesStaticImgBlockExist = True
         self.staticbitmap2 = wx.StaticBitmap(self.panel, pos=(10, 60))#this function has position, it is for selected image displayed.
         self.staticbitmap2.Hide()
         self.staticbitmap.SetBitmap(self.bitmapForMap)
@@ -775,6 +813,9 @@ class windowCreateImgBlock(wx.Frame):
         self.staticbitmap.Refresh()
         self.staticbitmap.SetBitmap(self.bitmapForMap)
         self.staticbitmap.Refresh()
+
+        global isThereImgBlock
+        isThereImgBlock = True
 
     def displayMapForMatrix(self, e):
 
@@ -806,7 +847,13 @@ class windowCreateImgBlock(wx.Frame):
             for y in range(self.yintervals):
                  dc.DrawRectangle(x * pxSize, y * pxSize, width = pxSize, height = pxSize)
         
-        self.staticbitmap = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+        global doesStaticImgBlockExist
+        if doesStaticImgBlockExist:
+            self.staticbitmap.Destroy()
+            self.staticbitmap = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+        else:
+            self.staticbitmap = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+            doesStaticImgBlockExist = True
         self.staticbitmap2 = wx.StaticBitmap(self.panel, pos=(10, 60))#this function has position, it is for selected image displayed.
         self.staticbitmap2.Hide()
         self.staticbitmap.SetBitmap(self.bitmapForMap)
@@ -820,58 +867,76 @@ class windowCreateImgBlock(wx.Frame):
         self.staticbitmap.SetBitmap(self.bitmapForMap)
         self.staticbitmap.Refresh()
 
+        global isThereImgBlock
+        isThereImgBlock = True
+
     def SaveFile(self, event):
-        defaultpath = '.'
+        global isThereImgBlock
         
-        openFileDialog = wx.FileDialog(self, message="Save file as...", defaultDir=defaultpath, wildcard="PNG files (*.png)|*.png")
-        if openFileDialog.ShowModal() == wx.ID_CANCEL:
-            return
-        # save the current contents in the file
-        #if self.magnifyVal > 1 then must rescale to x1 and then save file as png, for both drawing modes.
+        if isThereImgBlock == False:
+            print("error there is no active img block.")
+            dlg = ErrorDialog(parent = self.panel, option=3)
+            dlg.ShowModal()
+            dlg.Destroy()
+        else:
+            defaultpath = '.'
+            
+            openFileDialog = wx.FileDialog(self, message="Save file as...", defaultDir=defaultpath, wildcard="PNG files (*.png)|*.png")
+            if openFileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+            # save the current contents in the file
+            #if self.magnifyVal > 1 then must rescale to x1 and then save file as png, for both drawing modes.
 
-        pathname = openFileDialog.GetPath()
-        savedImageBitmap : wx.Bitmap = self.staticbitmap.GetBitmap()
+            pathname = openFileDialog.GetPath()
+            savedImageBitmap : wx.Bitmap = self.staticbitmap.GetBitmap()
 
-        sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSize))
+            sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSize))
 
-        wx.Bitmap.Rescale(savedImageBitmap, sizeNeeded)
-        #image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
+            wx.Bitmap.Rescale(savedImageBitmap, sizeNeeded)
+            #image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
 
-        savedImage : wx.Image = savedImageBitmap.ConvertToImage()
-        
-        savedImage.SaveFile(pathname, type=wx.BITMAP_TYPE_PNG)
-        openFileDialog.Destroy()
+            savedImage : wx.Image = savedImageBitmap.ConvertToImage()
+            
+            savedImage.SaveFile(pathname, type=wx.BITMAP_TYPE_PNG)
+            openFileDialog.Destroy()
 
     def SaveProject(self, event):
-        defaultpath = '.'
+        global isThereImgBlock
+        if isThereImgBlock == False:
+            print("error there is no active img block.")
+            dlg = ErrorDialog(parent = self.panel, option=3)
+            dlg.ShowModal()
+            dlg.Destroy()
+        else:
+            defaultpath = '.'
 
-        openFileDialog = wx.FileDialog(self, message="Save project as...", defaultDir=defaultpath, wildcard="SMB files (*.smb)|*.smb", style=wx.FD_SAVE)
-        if openFileDialog.ShowModal() == wx.ID_CANCEL:
-            return
-        # save the current contents in the file
-        pathname = openFileDialog.GetPath()
-        savedImageBitmap : wx.Bitmap = self.staticbitmap.GetBitmap()
-    
-        #############################################################################################NEWSTUFF
-        sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSize))
-        wx.Bitmap.Rescale(savedImageBitmap, sizeNeeded)
-        #############################################################################################
-
-        savedImage : wx.Image = savedImageBitmap.ConvertToImage()
-        savedImage.SaveFile(pathname, type=wx.BITMAP_TYPE_PNG)
-
-        with open(pathname, "rb") as image_file:
-            data = base64.b64encode(image_file.read())
-
-        f = open(pathname, "w")
-        str1 = str(self.x_totalSize) + "\n"
-        str2 = str(self.y_totalSize) + "\n"
-        f.write(str1)
-        f.write(str2)
-        datastr = data.decode("utf-8")
-        f.write(datastr)
+            openFileDialog = wx.FileDialog(self, message="Save project as...", defaultDir=defaultpath, wildcard="SMB files (*.smb)|*.smb", style=wx.FD_SAVE)
+            if openFileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+            # save the current contents in the file
+            pathname = openFileDialog.GetPath()
+            savedImageBitmap : wx.Bitmap = self.staticbitmap.GetBitmap()
         
-        openFileDialog.Destroy()
+            #############################################################################################NEWSTUFF
+            sizeNeeded : wx.Size = wx.Size(int(self.x_totalSize), int(self.y_totalSize))
+            wx.Bitmap.Rescale(savedImageBitmap, sizeNeeded)
+            #############################################################################################
+
+            savedImage : wx.Image = savedImageBitmap.ConvertToImage()
+            savedImage.SaveFile(pathname, type=wx.BITMAP_TYPE_PNG)
+
+            with open(pathname, "rb") as image_file:
+                data = base64.b64encode(image_file.read())
+
+            f = open(pathname, "w")
+            str1 = str(self.x_totalSize) + "\n"
+            str2 = str(self.y_totalSize) + "\n"
+            f.write(str1)
+            f.write(str2)
+            datastr = data.decode("utf-8")
+            f.write(datastr)
+            
+            openFileDialog.Destroy()
 
     def OpenProject(self, e):
             openFileDialog = wx.FileDialog(self, "Open SMB file", wildcard="SMB files (*.smb)|*.smb", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
@@ -948,6 +1013,9 @@ class windowCreateImgBlock(wx.Frame):
                 self.panel.vbox.Detach(self.staticbitmap)
                 self.panel.addToBoxSizerVbox(self.staticbitmap)
                 self.panel.setupScrolling()
+            
+            global isThereImgBlock
+            isThereImgBlock = True
 
     # Some function for redrawing using the given colour. Ideally, it
     # shouldn't do anything if the colour is the same as the one used
@@ -1584,17 +1652,26 @@ class GetData(wx.Dialog):
         self.result_y_dir = self.y_dir.GetValue()
         self.x_totalSize = self.x_totalSize2.GetValue()
         self.y_totalSize = self.y_totalSize2.GetValue()
-        if (int(self.x_totalSize) % int(self.result_x_dir) == 0) & (int(self.y_totalSize) % int(self.result_y_dir) == 0):
-            self.isDataThere = True
-            self.Destroy()
+        if self.result_x_dir=="" or self.result_y_dir=="" or self.x_totalSize=="" or self.y_totalSize=="":
+            print("input must not be blank.\n")
+            dlg = ErrorDialog(parent=self.panel, option=1)
+            dlg.ShowModal()
+            dlg.Destroy()
         else:
-            self.isDataThere = False
-            errormessage = wx.StaticText(self.panel, label="ERROR", pos=(260,70))
-            errormessage.SetForegroundColour("#FF0000")
-            errormessage2 = wx.StaticText(self.panel, label="numbers must be divisible", pos=(260,90))
-            errormessage2.SetForegroundColour("#FF0000")
-            errormessage3 = wx.StaticText(self.panel, label="with no remainder.", pos=(260,110))
-            errormessage3.SetForegroundColour("#FF0000")
+            if (int(self.x_totalSize) % int(self.result_x_dir) == 0) & (int(self.y_totalSize) % int(self.result_y_dir) == 0):
+                self.isDataThere = True
+                self.Destroy()
+            else:
+                self.isDataThere = False
+                dlg = ErrorDialog(parent=self.panel, option=2)
+                dlg.ShowModal()
+                dlg.Destroy()
+                '''errormessage = wx.StaticText(self.panel, label="ERROR", pos=(260,70))
+                errormessage.SetForegroundColour("#FF0000")
+                errormessage2 = wx.StaticText(self.panel, label="numbers must be divisible", pos=(260,90))
+                errormessage2.SetForegroundColour("#FF0000")
+                errormessage3 = wx.StaticText(self.panel, label="with no remainder.", pos=(260,110))
+                errormessage3.SetForegroundColour("#FF0000")'''
     
     def OnQuit(self, event):
         #self.result_name = None
@@ -1629,12 +1706,15 @@ class GetData2(wx.Dialog):
             self.Destroy()
         else:
             self.isDataThere = False
-            errormessage = wx.StaticText(self.panel, label="ERROR", pos=(260,70))
+            dlg = ErrorDialog(parent=self.panel, option=1)
+            dlg.ShowModal()
+            dlg.Destroy()
+            '''errormessage = wx.StaticText(self.panel, label="ERROR", pos=(260,70))
             errormessage.SetForegroundColour("#FF0000")
             errormessage2 = wx.StaticText(self.panel, label="numbers must be divisible", pos=(260,90))
             errormessage2.SetForegroundColour("#FF0000")
             errormessage3 = wx.StaticText(self.panel, label="with no remainder.", pos=(260,110))
-            errormessage3.SetForegroundColour("#FF0000")
+            errormessage3.SetForegroundColour("#FF0000")'''
 
     def OnQuit(self, event):
         #self.result_name = None
@@ -1679,6 +1759,7 @@ class ShowHelpDialog(wx.Dialog):
             self.lbl15name.SetForegroundColour("Blue")
 
             self.closeButton = wx.Button(self.panel, label="Ok", pos=(220,350))#pos=(240,240))
+            self.closeButton.SetDefault()
             
             self.closeButton.Bind(wx.EVT_BUTTON, self.OnQuit)
             self.Bind(wx.EVT_CLOSE, self.OnQuit)
@@ -1688,6 +1769,25 @@ class ShowHelpDialog(wx.Dialog):
             self.Destroy()
             self.Close()
 
+class ErrorDialog(wx.MessageDialog):
+    def __init__(self, parent, option):
+        match option:
+            case 0:
+                wx.MessageDialog.__init__(self, parent, message="There is no active map.", caption="Error", style=wx.OK_DEFAULT|wx.CENTRE)
+            case 1:
+                wx.MessageDialog.__init__(self, parent, message="Inputs must not be blank.", caption="Error", style=wx.OK_DEFAULT|wx.CENTRE)
+            case 2:
+                wx.MessageDialog.__init__(self, parent, message="Numbers must be divisible with no remainder.", caption="Error", style=wx.OK_DEFAULT|wx.CENTRE)
+            case 3:
+                wx.MessageDialog.__init__(self, parent, message="There is no active image block.", caption="Error", style=wx.OK_DEFAULT|wx.CENTRE)
+    
+    def OnQuit(self, event):
+        self.Destroy()
+        self.Close()
+
+    def OnQuit(self, event):
+        self.Destroy()
+        self.Close()
 
 class TestPanel(scrolled.ScrolledPanel):
 
@@ -1718,8 +1818,12 @@ class TestPanel(scrolled.ScrolledPanel):
     
     def addToBoxSizerVHbox(self, itemToAdd):
         self.vhbox.Add(itemToAdd)
+    
+    def OnQuit(self, event):
+        self.Destroy()
+        self.Close()
 
-def getCoordinatesFromBmp(x1, y1, xintervals, yintervals, arg1, arg2):
+def getCoordinatesFromBmp(x1, y1, xintervals, yintervals, arg1, arg2): # global function.
     for x2 in range(xintervals):
         for y2 in range(yintervals):
             if x1 in range(x2*arg1, arg1*(x2+1)):
