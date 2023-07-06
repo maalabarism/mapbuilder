@@ -218,8 +218,24 @@ class windowClass(wx.Frame):
         dc = wx.MemoryDC(self.bitmapForMap)
         dc.DrawBitmap(bitmap, x=0, y=0)
         
-        self.staticbitmap2.SetBitmap(self.bitmapForMap)
-        self.staticbitmap2.Refresh()
+        try:
+            self.staticbitmap2.SetBitmap(self.bitmapForMap)
+            self.staticbitmap2.Refresh()
+        except:
+            self.staticbitmap2 = wx.lib.statbmp.GenStaticBitmap(parent=self.panel, ID=wx.ID_ANY, pos=(10, 60), bitmap=self.bitmapForMap)
+            
+            self.staticbitmap2.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
+            self.staticbitmap2.Bind(wx.EVT_MOUSE_EVENTS, self.mouse_events)
+            self.staticbitmap2.Bind(wx.EVT_LEAVE_WINDOW, self.mouse_leaveWindow)
+            self.staticbitmap2.Bind(wx.EVT_LEFT_UP, self.on_release)
+
+            self.staticbitmap2.SetBitmap(self.bitmapForMap)
+            self.staticbitmap2.Refresh()
+
+            bmp = self.staticbitmap2.GetBitmap()
+            self.staticbitmap3.SetBitmap(bmp)
+            self.staticbitmap3.Refresh()
+            self.undo_list2.append(self.staticbitmap3.GetBitmap())
 
         global isConfigSet
         if isConfigSet == False:
@@ -395,7 +411,8 @@ class windowClass(wx.Frame):
         print("herehere\n")
         #self.staticbitmap2.SetBitmap(self.bitmapForMap)
         self.staticbitmap2.Refresh()
-
+        
+        
         if drawBool:
             if len(self.redo_list2) > 0:
                 self.redo_list2.clear()
