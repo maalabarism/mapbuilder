@@ -15,15 +15,14 @@ isConfigSet = False
 isConfigSet2 = False
 isSelectedImageSet = False
 drawBool = False
-drawBool2 = False
+#drawBool2 = False
 isThereMap = False
 isThereImgBlock = False
 drawLineBool = False
 destroyCreateBlockWindow = False
 eraseBackground = False
-globalBmp : wx.Bitmap = None
-
 leftColorTrue = False
+#globalBmp : wx.Bitmap = None
 
 class windowClass(wx.Frame):
 
@@ -516,6 +515,8 @@ class windowCreateImgBlock(wx.Frame):
         defaultColor2 = wx.Colour()
         defaultColor.Set("#33FFCB")
         defaultColor2.Set("#D329E3")
+        global doesStaticImgBlockExist
+        doesStaticImgBlockExist = False
 
         self.undo_list : list = []
         self.redo_list : list = []
@@ -655,6 +656,7 @@ class windowCreateImgBlock(wx.Frame):
         self.Bind(wx.EVT_MENU, self.SaveProject, saveBlockProject)
         self.Bind(wx.EVT_MENU, self.OpenProject, openBlockProject)
         self.Bind(wx.EVT_MENU, self.Quit, exitItem)
+        self.Bind(wx.EVT_CLOSE, self.Quit, exitItem)
 
         self.Bind(wx.EVT_MENU, self.editRedo, redoItem)
         self.Bind(wx.EVT_MENU, self.editUndo, undoItem)
@@ -721,7 +723,6 @@ class windowCreateImgBlock(wx.Frame):
 
         if destroyCreateBlockWindow == False:
             if dlg.isDataThere == True:
-                self.log1.AppendText("hereherehere\n")
                 self.drawingMode = dlg.drawingMode # 2 options: drawing mode or matrix mode.
                 print(self.drawingMode)
             else:
@@ -1038,8 +1039,6 @@ class windowCreateImgBlock(wx.Frame):
         dlg.Bind(wx.EVT_COLOUR_CHANGED, self.OnColourChanged)
         if (dlg.ShowModal() == wx.ID_OK):
             #color : wx.Colour = data.GetColour() #is of wx.Colour type
-            self.log1.AppendText("\nyes")
-
             self.selectedColorRight = self.selectedColor
             self.selectedColor = self.tempColor
 
@@ -1056,13 +1055,10 @@ class windowCreateImgBlock(wx.Frame):
             self.color2Bmp.SetBitmap(bmp2)
             self.color1Bmp.Refresh()
             self.color2Bmp.Refresh()
-
-            str1 = "Selected color herehere: " + self.selectedColor.GetAsString()
-            self.log1.Clear()
-            self.log1.AppendText(str1)
             # Colour did change.
         else:
-            self.log1.AppendText("\nno")
+            self.log1.Clear()
+            self.log1.AppendText("\nNo color change.")
             self.tempColor = color1
             # Colour didn't change.
 
@@ -1104,9 +1100,10 @@ class windowCreateImgBlock(wx.Frame):
         drawBool = True
         event.Skip()
 
-
     def mouse_events(self, event : wx.MouseEvent):
-
+        '''x2, y2 = event.GetPosition()
+        self.log1.Clear()
+        self.log1.AppendText(f"x:{x2} y:{y2}\n")'''
         global leftColorTrue
         if leftColorTrue == True:
             selectedColor = self.selectedColor
@@ -1194,6 +1191,9 @@ class windowCreateImgBlock(wx.Frame):
 
 
     def mouse_eventsMatrix(self, event : wx.MouseEvent):
+        '''x2, y2 = event.GetPosition()
+        self.log1.Clear()
+        self.log1.AppendText(f"x:{x2} y:{y2}\n")'''
         global leftColorTrue
         if leftColorTrue == True:
             selectedColor = self.selectedColor
@@ -1391,7 +1391,7 @@ class windowCreateImgBlock(wx.Frame):
                         dc.SelectObject(wx.NullBitmap)
                     else:
                         self.pos2Line = event2.GetPosition()
-                        self.DrawLineForMagnifiedBmp(pos1=self.pos1Line, pos2=self.pos2Line)
+                        self.DrawLineForMagnifiedBmp(pos1=self.pos1Line, pos2=self.pos2Line, option2=option)
                     drawLineBool = False
                 
                 self.staticbitmap.SetBitmap(self.bitmapForMap)
@@ -1423,7 +1423,7 @@ class windowCreateImgBlock(wx.Frame):
         self.staticbitmap2.Refresh()
         event2.Skip()
 
-    def DrawLineForMagnifiedBmp(self, pos1, pos2):
+    def DrawLineForMagnifiedBmp(self, pos1, pos2, option2):
         print("pos1: " + str(pos1[0]) + " " + str(pos1[1]) + " pos2: " + str(pos2[0]) + " " + str(pos2[1]) + "\n")
         diffArr  = [0] * 2
         diffArrAbs = [0] * 2
@@ -1461,24 +1461,24 @@ class windowCreateImgBlock(wx.Frame):
 
         if diffArr[0] > 0 and  diffArr[1] > 0:
             if diffArrAbs[0] > diffArrAbs[1]:
-                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[0], pos_2=pos2[0], slope=ySlope, pxSize2=pxSize, value2=yvalue2, option=0)
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[0], pos_2=pos2[0], slope=ySlope, pxSize2=pxSize, value2=yvalue2, option=0, option3=option2)
             else:
-                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[1], pos_2=pos2[1], slope=xSlope, pxSize2=pxSize, value2=xvalue2, option=1)
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[1], pos_2=pos2[1], slope=xSlope, pxSize2=pxSize, value2=xvalue2, option=1, option3=option2)
         elif diffArr[0] < 0 and  diffArr[1] > 0:
             if diffArrAbs[0] > diffArrAbs[1]:
-                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[0], pos_2=pos1[0], slope=ySlope, pxSize2=pxSize, value2=yvalue3, option=0)
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[0], pos_2=pos1[0], slope=ySlope, pxSize2=pxSize, value2=yvalue3, option=0, option3=option2)
             else:
-                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[1], pos_2=pos2[1], slope=xSlope, pxSize2=pxSize, value2=xvalue2, option=1)
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[1], pos_2=pos2[1], slope=xSlope, pxSize2=pxSize, value2=xvalue2, option=1, option3=option2)
         elif diffArr[0] > 0 and  diffArr[1] < 0:
             if diffArrAbs[0] > diffArrAbs[1]:
-                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[0], pos_2=pos2[0], slope=ySlope, pxSize2=pxSize, value2=yvalue2, option=0)
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[0], pos_2=pos2[0], slope=ySlope, pxSize2=pxSize, value2=yvalue2, option=0, option3=option2)
             else:
-                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[1], pos_2=pos1[1], slope=xSlope, pxSize2=pxSize, value2=xvalue3, option=1)
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[1], pos_2=pos1[1], slope=xSlope, pxSize2=pxSize, value2=xvalue3, option=1, option3=option2)
         else:
             if diffArrAbs[0] > diffArrAbs[1]:
-                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[0], pos_2=pos1[0], slope=ySlope, pxSize2=pxSize, value2=yvalue3, option=0)
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[0], pos_2=pos1[0], slope=ySlope, pxSize2=pxSize, value2=yvalue3, option=0, option3=option2)
             else:
-                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[1], pos_2=pos1[1], slope=xSlope, pxSize2=pxSize, value2=xvalue3, option=1)
+                self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos2[1], pos_2=pos1[1], slope=xSlope, pxSize2=pxSize, value2=xvalue3, option=1, option3=option2)
         '''if diffArr[0] > diffArr[1]:#if x axis has bigger difference
             print("x axis bigger difference")
             if diffArr[0] < 0 and  diffArr[1] < 0:
@@ -1494,8 +1494,8 @@ class windowCreateImgBlock(wx.Frame):
             else:
                 self.DrawLineForMagnifiedBmpNeededFunc(pos_1=pos1[1], pos_2=pos2[1], slope=xSlope, pxSize2=pxSize, value2=xvalue2, option=1, diffX=diffArr[0], diffY=diffArr[1])'''
         
-    def DrawLineForMagnifiedBmpNeededFunc(self, pos_1, pos_2, slope, pxSize2, value2, option):#if option == 0 then if diffArr[0] > diffArr[1]
-        global leftColorTrue
+    def DrawLineForMagnifiedBmpNeededFunc(self, pos_1, pos_2, slope, pxSize2, value2, option, option3):#if option == 0 then if diffArr[0] > diffArr[1]
+        global leftColorTrue #option3 == 1 then matrix mode, else painting mode.
         if leftColorTrue == True:
             selectedColor = self.selectedColor
         else:
@@ -1508,10 +1508,18 @@ class windowCreateImgBlock(wx.Frame):
                 value2 += slope
                 valueRounded = round(value2)
                 if option == 0:
-                    xVal, yVal = getCoordinatesFromBmp(x1=value, y1=valueRounded, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2=pxSize2)
+                    if option3 == 1:
+                        xVal, yVal = getCoordinatesFromBmp(x1=value, y1=valueRounded, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2=pxSize2)
+                        dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
+                    else:
+                        dc.DrawRectangle(x=(value), y=(valueRounded), width=pxSize2, height=pxSize2)
                 else:
-                    xVal, yVal = getCoordinatesFromBmp(x1=valueRounded, y1=value, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2=pxSize2)
-                dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
+                    if option3 == 1:
+                        xVal, yVal = getCoordinatesFromBmp(x1=valueRounded, y1=value, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2=pxSize2)
+                        dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
+                    else:
+                        dc.DrawRectangle(x=(valueRounded), y=(value), width=pxSize2, height=pxSize2)
+
 
     def editRedo(self, e : wx.EVT_MENU):
         if len(self.redo_list) > 0:
@@ -1585,8 +1593,13 @@ class windowCreateImgBlock(wx.Frame):
                 #print(str(i) + " " + str(j) )
                 self.colorMap2DArr[j][i] = color
 
-    def Quit(self, e):
-        self.Close()
+    def Quit(self, e : wx.EVT_CLOSE):
+        global doesStaticImgBlockExist
+        doesStaticImgBlockExist = False
+        if e.CanVeto():
+            e.Veto()
+        self.Destroy()
+        #self.Close()
 
 class GetModeData(wx.Dialog):
     def __init__(self, parent):
@@ -1618,8 +1631,8 @@ class GetModeData(wx.Dialog):
 
     def OnQuit(self, event):
         #self.result_name = None
-        global destroyCreateBlockWindow
-        destroyCreateBlockWindow = True
+        global doesStaticImgBlockExist
+        doesStaticImgBlockExist = False
         self.Destroy()
 
 class GetData(wx.Dialog):
