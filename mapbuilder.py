@@ -1,11 +1,12 @@
 
 import wx
 import wx.lib.scrolledpanel as scrolled
-#import wx.lib.inspection
+import wx.lib.inspection
 import wx.lib.statbmp
 import base64
 from io import BytesIO
 import os
+import re
 #import time
 
 #global variables:
@@ -22,6 +23,10 @@ drawLineBool = False
 destroyCreateBlockWindow = False
 eraseBackground = False
 leftColorTrue = False
+notifySaveProjectForMap = False
+notifySaveProjectForMap2 = False
+notifySaveProjectForImgBlock = False
+returnFromFrameClass = False
 #globalBmp : wx.Bitmap = None
 
 class windowClass(wx.Frame):
@@ -96,8 +101,9 @@ class windowClass(wx.Frame):
 
         self.Bind(wx.EVT_MENU, self.editRedo, redoItem)
         self.Bind(wx.EVT_MENU, self.editUndo, undoItem)
-        
 
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.Quit, self)
+        
         self.SetTitle('Simple Map Builder')
         
         self.SetSize(wx.Size(1000, 1000))
@@ -136,6 +142,9 @@ class windowClass(wx.Frame):
             self.staticbitmap.SetBitmap(wx.Bitmap(pathname))
         else:
             self.staticbitmap.SetBitmap(wx.Bitmap(pathname))
+        
+        global notifySaveProjectForMap2
+        notifySaveProjectForMap2 = True
         
         #ADD staticbitmap TO BOX SIZER
         self.panel.addToBoxSizerHbox(self.staticbitmap)
@@ -391,6 +400,9 @@ class windowClass(wx.Frame):
 
         
     def on_clic(self, event : wx.MouseEvent):
+        global notifySaveProjectForMap
+        if notifySaveProjectForMap2 == True:
+            notifySaveProjectForMap = True
         x, y = event.GetPosition()
         print(f"hi x: {x} y: {y}\n")
 
@@ -503,8 +515,13 @@ class windowClass(wx.Frame):
         dlg.Destroy()
 
     def Quit(self, e):
-        self.Destroy()
-        self.Close()
+        global notifySaveProjectForMap
+        if notifySaveProjectForMap == True:
+            print("areyousure?\n")
+            dlg = SaveBeforeQuitDialog2(parent=self.panel)
+            dlg.ShowModal()
+            dlg.Destroy()
+        notifySaveProjectForMap = False
 
 class windowCreateImgBlock(wx.Frame):
 
@@ -540,7 +557,10 @@ class windowCreateImgBlock(wx.Frame):
 
         self.basicGUI()
         self.getDrawingModeDialog(self)
-
+        global returnFromFrameClass
+        if returnFromFrameClass == True:
+            returnFromFrameClass = False
+            return
         '''if(self.drawingMode == "Painting Mode"): #Check drawing mode and init variables.
             self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
             self.staticbitmap.Bind(wx.EVT_RIGHT_DOWN, self.on_clic)
@@ -555,7 +575,7 @@ class windowCreateImgBlock(wx.Frame):
             self.staticbitmap.Bind(wx.EVT_LEAVE_WINDOW, self.mouse_leaveWindow)
             self.staticbitmap.Bind(wx.EVT_LEFT_UP, self.on_releaseMatrix)
             self.staticbitmap.Bind(wx.EVT_RIGHT_UP, self.on_releaseMatrix)'''
-            
+        
         self.magnifyInput = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(30,30), value=self.magnifyValStr)
         #self.magnifyInput2 = wx.TextCtrl(self.panel, wx.ID_ANY, pos=(840, 0), size=(50,30), value=defaultMagnifySize2, style = wx.TE_MULTILINE | wx.TE_READONLY)
 
@@ -661,6 +681,8 @@ class windowCreateImgBlock(wx.Frame):
         self.Bind(wx.EVT_MENU, self.editRedo, redoItem)
         self.Bind(wx.EVT_MENU, self.editUndo, undoItem)
 
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.Quit, self)
+
         self.SetTitle('Create Image Block')
         
         self.SetSize(wx.Size(1000, 1000))
@@ -722,11 +744,12 @@ class windowCreateImgBlock(wx.Frame):
         global destroyCreateBlockWindow
 
         if destroyCreateBlockWindow == False:
-            if dlg.isDataThere == True:
-                self.drawingMode = dlg.drawingMode # 2 options: drawing mode or matrix mode.
-                print(self.drawingMode)
-            else:
-               self.log1.AppendText("No input found\n")
+            if hasattr(dlg, 'isDataThere'):
+                if dlg.isDataThere == True:
+                    self.drawingMode = dlg.drawingMode # 2 options: drawing mode or matrix mode.
+                    print(self.drawingMode)
+                else:
+                    self.log1.AppendText("No input found\n")
                
     def getDialog2(self, e):
         dlg = GetData2(parent = self.panel)
@@ -1070,6 +1093,9 @@ class windowCreateImgBlock(wx.Frame):
         #self.Redraw(data.GetColour())
 
     def on_clic(self, event : wx.MouseEvent):
+        global notifySaveProjectForImgBlock
+        notifySaveProjectForImgBlock = True
+
         x, y = event.GetPosition()
         print(f"hi2 x: {x} y: {y}\n")
         selectedColor = self.getColorLeftRightClick(evt=event)
@@ -1144,6 +1170,8 @@ class windowCreateImgBlock(wx.Frame):
         self.onReleaseFunc(event2=event, option=0)
 
     def on_clicMatrix(self, event : wx.MouseEvent):
+        global notifySaveProjectForImgBlock
+        notifySaveProjectForImgBlock = True
 
         selectedColor = self.getColorLeftRightClick(evt=event)
         
@@ -1593,12 +1621,18 @@ class windowCreateImgBlock(wx.Frame):
                 #print(str(i) + " " + str(j) )
                 self.colorMap2DArr[j][i] = color
 
-    def Quit(self, e : wx.EVT_CLOSE):
+    def Quit(self, e):
+        global notifySaveProjectForImgBlock
+        if notifySaveProjectForImgBlock == True:
+            print("areyousure?\n")
+            dlg = SaveBeforeQuitDialog2(parent=self.panel)
+            dlg.ShowModal()
+            dlg.Destroy()
+        notifySaveProjectForImgBlock = False
+
         global doesStaticImgBlockExist
         doesStaticImgBlockExist = False
-        if e.CanVeto():
-            e.Veto()
-        self.Destroy()
+        #self.Destroy()
         #self.Close()
 
 class GetModeData(wx.Dialog):
@@ -1633,12 +1667,16 @@ class GetModeData(wx.Dialog):
         #self.result_name = None
         global doesStaticImgBlockExist
         doesStaticImgBlockExist = False
-        self.Destroy()
+        print("OnQuit call")
+        parent = self.GetGrandParent()
+        parent.Destroy()
+        global returnFromFrameClass
+        returnFromFrameClass = True
 
 class GetData(wx.Dialog):
     def __init__(self, parent):
         self.isDataThere = False
-        wx.Dialog.__init__(self, parent, wx.ID_ANY, "Create Image Block", size= (470,320))
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, "Create New Project", size= (470,320))
         self.panel = wx.Panel(self, wx.ID_ANY)
 
         self.lblname = wx.StaticText(self.panel, label="x-dir per block:", pos=(20,20))
@@ -1671,20 +1709,32 @@ class GetData(wx.Dialog):
             dlg.ShowModal()
             dlg.Destroy()
         else:
-            if (int(self.x_totalSize) % int(self.result_x_dir) == 0) & (int(self.y_totalSize) % int(self.result_y_dir) == 0):
-                self.isDataThere = True
-                self.Destroy()
+            regexp1 = re.search('[a-zA-Z]', self.result_x_dir)
+            regexp2 = re.search('[a-zA-Z]', self.result_y_dir)
+            regexp3 = re.search('[a-zA-Z]', self.x_totalSize)
+            regexp4 = re.search('[a-zA-Z]', self.y_totalSize)
+
+            if regexp1 == None and regexp2 == None and regexp3 == None and regexp4 == None:
+                if (int(self.x_totalSize) % int(self.result_x_dir) == 0) & (int(self.y_totalSize) % int(self.result_y_dir) == 0):
+                    self.isDataThere = True
+                    self.Destroy()
+                else:
+                    self.isDataThere = False
+                    dlg = ErrorDialog(parent=self.panel, option=2)
+                    dlg.ShowModal()
+                    dlg.Destroy()
+                    '''errormessage = wx.StaticText(self.panel, label="ERROR", pos=(260,70))
+                    errormessage.SetForegroundColour("#FF0000")
+                    errormessage2 = wx.StaticText(self.panel, label="numbers must be divisible", pos=(260,90))
+                    errormessage2.SetForegroundColour("#FF0000")
+                    errormessage3 = wx.StaticText(self.panel, label="with no remainder.", pos=(260,110))
+                    errormessage3.SetForegroundColour("#FF0000")'''
             else:
                 self.isDataThere = False
-                dlg = ErrorDialog(parent=self.panel, option=2)
+                dlg = ErrorDialog(parent=self.panel, option=4)
                 dlg.ShowModal()
                 dlg.Destroy()
-                '''errormessage = wx.StaticText(self.panel, label="ERROR", pos=(260,70))
-                errormessage.SetForegroundColour("#FF0000")
-                errormessage2 = wx.StaticText(self.panel, label="numbers must be divisible", pos=(260,90))
-                errormessage2.SetForegroundColour("#FF0000")
-                errormessage3 = wx.StaticText(self.panel, label="with no remainder.", pos=(260,110))
-                errormessage3.SetForegroundColour("#FF0000")'''
+
     
     def OnQuit(self, event):
         #self.result_name = None
@@ -1714,20 +1764,28 @@ class GetData2(wx.Dialog):
     def SaveConnString2(self, event):
         self.x_totalSize = self.x_totalSize2.GetValue()
         self.y_totalSize = self.y_totalSize2.GetValue()
-        if (self.x_totalSize and self.y_totalSize):
-            self.isDataThere = True
-            self.Destroy()
+        regexp5 = re.search("[a-zA-Z]", self.x_totalSize)
+        regexp6 = re.search("[a-zA-Z]", self.y_totalSize)
+        if regexp5 == None and regexp6 == None:
+            if (self.x_totalSize and self.y_totalSize):
+                self.isDataThere = True
+                self.Destroy()
+            else:
+                self.isDataThere = False
+                dlg = ErrorDialog(parent=self.panel, option=1)
+                dlg.ShowModal()
+                dlg.Destroy()
+                '''errormessage = wx.StaticText(self.panel, label="ERROR", pos=(260,70))
+                errormessage.SetForegroundColour("#FF0000")
+                errormessage2 = wx.StaticText(self.panel, label="numbers must be divisible", pos=(260,90))
+                errormessage2.SetForegroundColour("#FF0000")
+                errormessage3 = wx.StaticText(self.panel, label="with no remainder.", pos=(260,110))
+                errormessage3.SetForegroundColour("#FF0000")'''
         else:
             self.isDataThere = False
-            dlg = ErrorDialog(parent=self.panel, option=1)
+            dlg = ErrorDialog(parent=self.panel, option=4)
             dlg.ShowModal()
             dlg.Destroy()
-            '''errormessage = wx.StaticText(self.panel, label="ERROR", pos=(260,70))
-            errormessage.SetForegroundColour("#FF0000")
-            errormessage2 = wx.StaticText(self.panel, label="numbers must be divisible", pos=(260,90))
-            errormessage2.SetForegroundColour("#FF0000")
-            errormessage3 = wx.StaticText(self.panel, label="with no remainder.", pos=(260,110))
-            errormessage3.SetForegroundColour("#FF0000")'''
 
     def OnQuit(self, event):
         #self.result_name = None
@@ -1793,14 +1851,39 @@ class ErrorDialog(wx.MessageDialog):
                 wx.MessageDialog.__init__(self, parent, message="Numbers must be divisible with no remainder.", caption="Error", style=wx.OK_DEFAULT|wx.CENTRE)
             case 3:
                 wx.MessageDialog.__init__(self, parent, message="There is no active image block.", caption="Error", style=wx.OK_DEFAULT|wx.CENTRE)
+            case 4:
+                wx.MessageDialog.__init__(self, parent, message="Input must be numbers", caption="Error", style=wx.OK_DEFAULT|wx.CENTRE)
     
     def OnQuit(self, event):
         self.Destroy()
         self.Close()
 
+class SaveBeforeQuitDialog2(wx.MessageDialog):
+    def __init__(self, parent):
+        wx.MessageDialog.__init__(self, parent, message="Do you want to save project before quitting?", caption="Save Project Before Quit", style=wx.OK_DEFAULT|wx.CENTRE|wx.OK|wx.CANCEL)
+    
     def OnQuit(self, event):
         self.Destroy()
         self.Close()
+class SaveBeforeQuitDialog(wx.Dialog):
+        def __init__(self, parent):
+            wx.Dialog.__init__(self, parent, wx.ID_ANY, "Save Project Before Quit", pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
+            self.panel = wx.Panel(self, wx.ID_ANY)
+            self.lblname = wx.StaticText(self.panel, label="Do you want to save the project before quitting?", pos=(20,20))
+
+            self.saveButton = wx.Button(self.panel, id=wx.ID_OK, label="Save", pos=(140,100))
+            self.saveButton.SetDefault()
+
+            self.closeButton = wx.Button(self.panel, label="Cancel", pos=(240,100))#pos=(240,240))
+            self.saveButton.Bind(wx.EVT_BUTTON, parent.SaveProject)
+            self.closeButton.Bind(wx.EVT_BUTTON, self.OnQuit)
+            self.Bind(wx.EVT_CLOSE, self.OnQuit)
+            self.Show()
+        
+        def OnQuit(self, e):
+            self.Destroy()
+            self.Close()
+
 
 class TestPanel(scrolled.ScrolledPanel):
 
@@ -1855,7 +1938,7 @@ def getCoordinatesFromBmp(x1, y1, xintervals, yintervals, arg1, arg2): # global 
 
 def main():
     app = wx.App()
-    #wx.lib.inspection.InspectionTool().Show()
+    wx.lib.inspection.InspectionTool().Show()
     windowClass(None)
     app.MainLoop()
     return 0
