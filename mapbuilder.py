@@ -1,12 +1,15 @@
 
 import wx
 import wx.lib.scrolledpanel as scrolled
-import wx.lib.inspection
+#import wx.lib.inspection
 import wx.lib.statbmp
 import base64
 from io import BytesIO
 import os
 import re
+import math
+from binarytreeclasses import Node
+#from binarytree import Node
 #import time
 
 #global variables:
@@ -102,7 +105,8 @@ class windowClass(wx.Frame):
         self.Bind(wx.EVT_MENU, self.editRedo, redoItem)
         self.Bind(wx.EVT_MENU, self.editUndo, undoItem)
 
-        self.Bind(wx.EVT_WINDOW_DESTROY, self.Quit, self)
+        self.Bind(wx.EVT_CLOSE, self.Quit, self)
+        #self.Bind(wx.EVT_WINDOW_DESTROY, self.Quit, self)
         
         self.SetTitle('Simple Map Builder')
         
@@ -113,6 +117,7 @@ class windowClass(wx.Frame):
         self.SetIcon(icon)
 
         self.Show(True)
+        self.Maximize(True)
         
     def CreateImageFile(self, e):
         app2 = wx.App()
@@ -518,10 +523,23 @@ class windowClass(wx.Frame):
         global notifySaveProjectForMap
         if notifySaveProjectForMap == True:
             print("areyousure?\n")
-            dlg = SaveBeforeQuitDialog2(parent=self.panel)
-            dlg.ShowModal()
-            dlg.Destroy()
+            dialog = wx.MessageDialog(self, "Do you want to save before quitting?", "Save Project Before Quitting", wx.YES_NO | wx.CANCEL | wx.CANCEL_DEFAULT | wx.ICON_INFORMATION)
+            answer = dialog.ShowModal()
+            dialog.Destroy()
+            if answer == wx.ID_YES:
+                # Do something for the "Yes" button press
+                self.SaveProject(e)
+                self.Destroy()
+            elif answer == wx.ID_NO:
+                # Do something for the "No" button press
+                self.Destroy()
+                pass
+            else:
+                # Do nothing for the "Cancel" button press
+                return
         notifySaveProjectForMap = False
+        self.Destroy()
+
 
 class windowCreateImgBlock(wx.Frame):
 
@@ -556,11 +574,7 @@ class windowCreateImgBlock(wx.Frame):
         self.pos2Line = None
 
         self.basicGUI()
-        self.getDrawingModeDialog(self)
-        global returnFromFrameClass
-        if returnFromFrameClass == True:
-            returnFromFrameClass = False
-            return
+        
         '''if(self.drawingMode == "Painting Mode"): #Check drawing mode and init variables.
             self.staticbitmap.Bind(wx.EVT_LEFT_DOWN, self.on_clic)
             self.staticbitmap.Bind(wx.EVT_RIGHT_DOWN, self.on_clic)
@@ -604,7 +618,12 @@ class windowCreateImgBlock(wx.Frame):
         #self.Bind(wx.EVT_CHECKBOX, self.onEraseCheckbox, self.eraseCheckbox)
         #self.panel.addToBoxSizerVHbox(self.lineCheckBox)
         #self.panel.setupScrolling()
-
+        self.getDrawingModeDialog(self)
+        global returnFromFrameClass
+        if returnFromFrameClass == True:
+            returnFromFrameClass = False
+            return
+        
         global destroyCreateBlockWindow
         if destroyCreateBlockWindow:
             #destroy window
@@ -625,10 +644,11 @@ class windowCreateImgBlock(wx.Frame):
                     destroyCreateBlockWindow = False
                     self.Destroy()'''
 
-        
-        
         global isConfigSet2
         isConfigSet2 = True
+
+        self.Show(True)
+        self.Maximize(True)
         
 
     def basicGUI(self):
@@ -681,7 +701,8 @@ class windowCreateImgBlock(wx.Frame):
         self.Bind(wx.EVT_MENU, self.editRedo, redoItem)
         self.Bind(wx.EVT_MENU, self.editUndo, undoItem)
 
-        self.Bind(wx.EVT_WINDOW_DESTROY, self.Quit, self)
+        #self.Bind(wx.EVT_WINDOW_DESTROY, self.Quit, self)
+        self.Bind(wx.EVT_CLOSE, self.Quit, self)
 
         self.SetTitle('Create Image Block')
         
@@ -736,8 +757,6 @@ class windowCreateImgBlock(wx.Frame):
         self.panel.setupScrolling()'''
         ##########################################
 
-        self.Show(True)
-
     def getDrawingModeDialog(self, e):
         dlg = GetModeData(parent = self.panel)
         dlg.ShowModal()
@@ -756,8 +775,8 @@ class windowCreateImgBlock(wx.Frame):
         dlg.ShowModal()
         if dlg.isDataThere == True:
             self.log1.AppendText(" x-dir total size(px): " + dlg.x_totalSize + " y-dir total size(px): " + dlg.y_totalSize + "\n")
-            self.x_totalSize = dlg.x_totalSize
-            self.y_totalSize = dlg.y_totalSize
+            self.x_totalSize = int(dlg.x_totalSize)
+            self.y_totalSize = int(dlg.y_totalSize)
 
             if(self.drawingMode == "Painting Mode"):
                 self.displayMap2(self)
@@ -814,8 +833,12 @@ class windowCreateImgBlock(wx.Frame):
         dc.SetBrush(wx.Brush('#FFFFFF'))
         dc.DrawRectangle(0, 0, width=int(self.x_totalSize), height=int(self.y_totalSize))
 
-        self.colorMap2DArr = [['h' for x in range(int(self.x_totalSize))] for y in range(int(self.y_totalSize))]
+        self.colorMap2DArr = [['h' for x in range(int(self.y_totalSize))] for y in range(int(self.x_totalSize))]
         self.initColorMap2DArr(val1=int(self.x_totalSize), val2=int(self.y_totalSize), color="#FFFFFF")
+
+        self.rootNode = Node(data="0,0", string1="#FFFFFF")
+        self.initColorMapBinTree(val1=int(self.x_totalSize), val2=int(self.y_totalSize), color="#FFFFFF")
+
         print(self.colorMap2DArr)
         print("1**1")
 
@@ -831,7 +854,8 @@ class windowCreateImgBlock(wx.Frame):
         self.staticbitmap.SetBitmap(self.bitmapForMap)
         self.staticbitmap2.SetBitmap(self.bitmapForMap)
 
-        self.panel.addToBoxSizerVbox(self.staticbitmap)
+        #self.panel.addToBoxSizerVbox(self.staticbitmap)
+        self.panel.addToBoxSizerVBoxCentre(self.staticbitmap)
         self.panel.setupScrolling()
 
         self.staticbitmap.Refresh()
@@ -845,9 +869,16 @@ class windowCreateImgBlock(wx.Frame):
 
         self.xintervals = int(self.x_totalSize)
         self.yintervals = int(self.y_totalSize)
+        print(f"self.xintervals: {self.xintervals} self.yintervals: {self.yintervals}\n")
 
-        self.colorMap2DArr = [['h' for x in range(self.xintervals)] for y in range(self.yintervals)]
-        self.initColorMap2DArr(val1=self.xintervals, val2=self.yintervals, color="#E5CCFF")
+        self.colorMap2DArr = [['h' for x in range(self.yintervals)] for y in range(self.xintervals)]
+        #self.initColorMap2DArr(val1=self.xintervals, val2=self.yintervals, color="#E5CCFF")
+        self.initColorMap2DArr(val1=int(self.xintervals), val2=int(self.yintervals), color="#E5CCFF")
+
+        self.rootNode = Node(data="0,0", string1="#E5CCFF")
+        self.initColorMapBinTree(val1=int(self.xintervals), val2=int(self.yintervals), color="#E5CCFF")
+
+        
         print("after func: ")
         print(self.colorMap2DArr)
         print("2**2")
@@ -884,7 +915,8 @@ class windowCreateImgBlock(wx.Frame):
         self.staticbitmap2.SetBitmap(self.bitmapForMap)
 
         #self.panel.vbox.Detach(self.staticbitmap2)
-        self.panel.addToBoxSizerVbox(self.staticbitmap)
+        #self.panel.addToBoxSizerVbox(self.staticbitmap)
+        self.panel.addToBoxSizerVBoxCentre(self.staticbitmap)
         self.panel.setupScrolling()
 
         self.staticbitmap.Refresh()
@@ -1049,7 +1081,7 @@ class windowCreateImgBlock(wx.Frame):
 
     def OnColourChanged(self, event : wx.EVT_COLOUR_CHANGED):
         self.tempColor : wx.Colour = event.GetColour() #is of wx.Colour type
-        str1 = "Selected color: " + self.tempColor.GetAsString()
+        str1 = "Selected color: " + self.tempColor.GetAsString(flags=wx.C2S_NAME)
         self.log1.Clear()
         self.log1.AppendText(str1)
 
@@ -1059,6 +1091,8 @@ class windowCreateImgBlock(wx.Frame):
         color1.Set("#33FFCB")
         data.SetColour(color1)
         dlg = wx.ColourDialog(self, data)
+        dlg.Center()
+        dlg.Show()
         dlg.Bind(wx.EVT_COLOUR_CHANGED, self.OnColourChanged)
         if (dlg.ShowModal() == wx.ID_OK):
             #color : wx.Colour = data.GetColour() #is of wx.Colour type
@@ -1174,7 +1208,7 @@ class windowCreateImgBlock(wx.Frame):
         notifySaveProjectForImgBlock = True
 
         selectedColor = self.getColorLeftRightClick(evt=event)
-        
+        selectedColorStr = selectedColor.GetAsString(flags=wx.C2S_HTML_SYNTAX)
         x, y = event.GetPosition()
         
         dc = wx.MemoryDC(self.bitmapForMap)
@@ -1191,23 +1225,56 @@ class windowCreateImgBlock(wx.Frame):
                     print(f"draw1 ({x}, {y})\n")
                     point = wx.Point(x, y)
                     dc.DrawPoint(point)
+                    self.updateColorMap2DArr(val1=x, val2=y, color=selectedColorStr)
+                    self.updateColorMapBinTree(val1=x, val2=y, color2=selectedColorStr)
+                    print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH") #this is for testing 
+                    print(self.rootNode.data)
+                    print(self.rootNode.string1)
+                    print(self.rootNode.right.data)
+                    print(self.rootNode.right.string1)
+                    print(self.rootNode.left.data)
+                    print(self.rootNode.left.string1)
                     print("draw\n")
                 case "Line":
                     print("line\n")
                 case "Fill":
                     print("fill\n")
+                    self.performFill(xPos=x, yPos=y, targetColor=selectedColorStr, pxSizeIs0=True)
+                    print("performfillfinished")
+                    '''self.performFillForMatrix(xPos=x, yPos=y, targetColor=selectedColorStr, pxSizeIs0=True)'''
         else:
-            self.xintervals = int(self.x_totalSize)
-            self.yintervals = int(self.y_totalSize)
+            match self.drawingAction:
+                case "Draw":
+                    self.xintervals = int(self.x_totalSize)
+                    self.yintervals = int(self.y_totalSize)
 
-            xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
+                    xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
 
-            dc.SetBrush(wx.Brush(selectedColor))
-            dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
-            dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
-            val1 = (xVal*pxSize2)
-            val2 = (yVal*pxSize2)
-            print(f"draw rect ({val1}, {val2})\n")
+                    dc.SetBrush(wx.Brush(selectedColor))
+                    dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
+                    dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
+                    print(f"xVal:{xVal}, yVal:{yVal})\n")
+                    self.updateColorMap2DArr(val1=xVal, val2=yVal, color=selectedColorStr)
+                    self.updateColorMapBinTree(val1=xVal, val2=yVal, color2=selectedColorStr)
+                    print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH") #this is for testing 
+                    print(self.rootNode.data)
+                    print(self.rootNode.string1)
+                    print(self.rootNode.right.data)
+                    print(self.rootNode.right.string1)
+                    print(self.rootNode.left.data)
+                    print(self.rootNode.left.string1)
+
+                    val1 = (xVal*pxSize2)
+                    val2 = (yVal*pxSize2)
+                    print(f"draw rect ({val1}, {val2})\n")
+                case "Line":
+                    print("line\n")
+                case "Fill":
+                    print("fill\n")
+                    '''self.xintervals = int(self.x_totalSize)
+                    self.yintervals = int(self.y_totalSize)
+                    xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
+                    self.performFillForMatrix(xPos=xVal, yPos=yVal, targetColor=selectedColorStr, pxSizeIs0=False)'''
         
         dc.SelectObject(wx.NullBitmap)
             
@@ -1227,6 +1294,8 @@ class windowCreateImgBlock(wx.Frame):
             selectedColor = self.selectedColor
         else:
             selectedColor = self.selectedColorRight
+
+        selectedColorStr = selectedColor.GetAsString(flags=wx.C2S_HTML_SYNTAX)
 
         if drawBool == True:
             x, y = event.GetPosition()
@@ -1248,6 +1317,8 @@ class windowCreateImgBlock(wx.Frame):
                     case "Draw":
                         point = wx.Point(x, y)
                         dc.DrawPoint(point)
+                        self.updateColorMap2DArr(val1=x, val2=y, color=selectedColorStr)
+                        self.updateColorMapBinTree(val1=x, val2=y, color2=selectedColorStr)
                         print("draw2\n")
                     case "Line":
                         print("line2\n")
@@ -1260,11 +1331,14 @@ class windowCreateImgBlock(wx.Frame):
                         dc.SetBrush(wx.Brush(selectedColor))
                         dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
                         dc.DrawRectangle(x=(xVal*pxSize2), y=(yVal*pxSize2), width=pxSize2, height=pxSize2)
+                        self.updateColorMap2DArr(val1=xVal, val2=yVal, color=selectedColorStr)
+                        self.updateColorMapBinTree(val1=xVal, val2=yVal, color2=selectedColorStr)
+                        print(f"xVal:{xVal}, yVal:{yVal})\n")
                         print("draw2\n")
                     case "Line":
                         print("line2\n")
                     case "Fill":
-                        print("fill2\n")            
+                        print("fill2\n")      
             dc.SelectObject(wx.NullBitmap)
             
             self.staticbitmap.SetBitmap(self.bitmapForMap)
@@ -1273,6 +1347,8 @@ class windowCreateImgBlock(wx.Frame):
 
     def on_releaseMatrix(self, event : wx.MouseEvent):
         self.onReleaseFunc(event2=event, option=1)
+        print("resultingmap:\n")
+        print(self.colorMap2DArr)
         print("release")
 
     def mouse_leaveWindow(self, event : wx.EVT_LEAVE_WINDOW):
@@ -1619,19 +1695,176 @@ class windowCreateImgBlock(wx.Frame):
         for i in range(0, val1):
             for j in range(0, val2):
                 #print(str(i) + " " + str(j) )
-                self.colorMap2DArr[j][i] = color
+                self.colorMap2DArr[i][j] = color
+    
+    def updateColorMap2DArr(self, val1 : int, val2 : int, color : str):
+        self.colorMap2DArr[val1][val2] = color #correct functionality.
+
+    
+    def initColorMapBinTree(self, val1 : int, val2 : int, color : str):
+        for i in range(val1):
+            for j in range(val2):
+                str1 = str(i) + "," + str(j)
+                print(str1)
+                if i == 0 and j == 0:
+                    print("doing nothing")
+                    #do nothing
+                    #self.rootNode = Node(data=str1, string1=color)
+                else:
+                    self.rootNode.insert(data2=str1, string2=color)
+        print("TESTINGTESTINGINITCOLORMAPBINTREE:")
+        print(self.rootNode.left.left.left.left.left.right.right.right.data)
+    
+    def updateColorMapBinTree(self, val1 : int, val2 : int, color2 : str):
+        print("TESTINGTESTINGINITCOLORMAPBINTREE2: val1, val2: :"+ str(val1) +", "+str(val2))
+        coordinates1 = str(val1) + "," + str(val2)
+        self.rootNode.updateColorAtCoordinates(coordinates=coordinates1, color=color2)
+
+    def performFill(self, xPos, yPos, targetColor, pxSizeIs0):
+        dc = wx.MemoryDC(self.bitmapForMap)
+        dc.SetPen(wx.Pen(targetColor, style=wx.PENSTYLE_SOLID))
+        
+        #ex if 3,3 , then target coordinates to color is (2,2), (2,3), (2,4), (3,2), (3,3), (3,4), (4,2), (4,3), (4,4)
+        performFillList = []
+        xPosMinus = xPos - 1
+        xPosPlus = xPos + 1
+        yPosMinus = yPos - 1
+        yPosPlus = yPos + 1
+        
+        if pxSizeIs0 == True:
+            if(xPosMinus > 0):# for xPosMin
+                if(yPosMinus > 0 and (targetColor != self.colorMap2DArr[xPosMinus][yPosMinus])): # then color
+                    point = wx.Point(xPosMinus, yPosMinus)
+                    dc.DrawPoint(point)
+                    self.updateColorMap2DArr(val1=xPosMinus, val2=yPosMinus, color=targetColor)
+                    self.performFill(xPos=xPosMinus, yPos=yPosMinus, targetColor=targetColor, pxSizeIs0=True)
+                if(targetColor != self.colorMap2DArr[xPosMinus][yPos]): # then color
+                    point = wx.Point(xPosMinus, yPos)
+                    dc.DrawPoint(point)
+                    self.updateColorMap2DArr(val1=xPosMinus, val2=yPos, color=targetColor)
+                    self.performFill(xPos=xPosMinus, yPos=yPos, targetColor=targetColor, pxSizeIs0=True)
+                if(yPosPlus < self.y_totalSize and targetColor != self.colorMap2DArr[xPosMinus][yPosPlus]): # then color
+                    point = wx.Point(xPosMinus, yPosPlus)
+                    dc.DrawPoint(point)
+                    self.updateColorMap2DArr(val1=xPosMinus, val2=yPosPlus, color=targetColor)
+                    self.performFill(xPos=xPosMinus, yPos=yPosPlus, targetColor=targetColor, pxSizeIs0=True)
+            
+            # for xPos
+            if(yPosMinus > 0 and (targetColor != self.colorMap2DArr[xPos][yPosMinus])): # then color
+                point = wx.Point(xPos, yPosMinus)
+                dc.DrawPoint(point)
+                self.updateColorMap2DArr(val1=xPos, val2=yPosMinus, color=targetColor)
+                self.performFill(xPos=xPos, yPos=yPosMinus, targetColor=targetColor, pxSizeIs0=True)
+            if(targetColor != self.colorMap2DArr[xPos][yPos]): # then color
+                point = wx.Point(xPos, yPos)
+                dc.DrawPoint(point)
+                self.updateColorMap2DArr(val1=xPos, val2=yPos, color=targetColor)
+                self.performFill(xPos=xPos, yPos=yPos, targetColor=targetColor, pxSizeIs0=True)
+            if(yPosPlus < self.y_totalSize and targetColor != self.colorMap2DArr[xPos][yPosPlus]): # then color
+                point = wx.Point(xPos, yPosPlus)
+                dc.DrawPoint(point)
+                self.updateColorMap2DArr(val1=xPos, val2=yPosPlus, color=targetColor)
+                self.performFill(xPos=xPos, yPos=yPosPlus, targetColor=targetColor, pxSizeIs0=True)
+
+            # for xPosPlus
+            if(xPosPlus <  self.x_totalSize):# for xPosMin
+                if(yPosMinus > 0 and (targetColor != self.colorMap2DArr[xPosPlus][yPosMinus])): # then color
+                    point = wx.Point(xPosPlus, yPosMinus)
+                    dc.DrawPoint(point)
+                    self.updateColorMap2DArr(val1=xPosPlus, val2=yPosMinus, color=targetColor)
+                    self.performFill(xPos=xPosPlus, yPos=yPosMinus, targetColor=targetColor, pxSizeIs0=True)
+                if(targetColor != self.colorMap2DArr[xPosPlus][yPos]): # then color
+                    point = wx.Point(xPosPlus, yPos)
+                    dc.DrawPoint(point)
+                    self.updateColorMap2DArr(val1=xPosPlus, val2=yPos, color=targetColor)
+                    self.performFill(xPos=xPosPlus, yPos=yPos, targetColor=targetColor, pxSizeIs0=True)
+                if(yPosPlus < self.y_totalSize and targetColor != self.colorMap2DArr[xPosPlus][yPosPlus]): # then color
+                    point = wx.Point(xPosPlus, yPosPlus)
+                    dc.DrawPoint(point)
+                    self.updateColorMap2DArr(val1=xPosPlus, val2=yPosPlus, color=targetColor)
+                    self.performFill(xPos=xPosPlus, yPos=yPosPlus, targetColor=targetColor, pxSizeIs0=True)
+
+
+    '''def performFill(self, xPos, yPos, targetColor, pxSizeIs0):
+        if pxSizeIs0:
+            '''
+    
+    '''def performFillForMatrix(self, xPos, yPos, targetColor, pxSizeIs0): # is broken for now.
+        pxSize2 : int = self.realMagnifyVal
+        dc = wx.MemoryDC(self.bitmapForMap)
+        dc.SetPen(wx.Pen(targetColor, style=wx.PENSTYLE_SOLID))
+        counter1 = xPos
+        counter2 = yPos
+        maxCount = int(self.x_totalSize)
+        maxCount2 = int(self.y_totalSize)
+        breakForOuterLoop = False
+        while counter1 <= (maxCount-1):
+            print("counter1 is: "+str(counter1))
+            print("counter2 is: "+str(counter2))
+            if self.colorMap2DArr[counter1][counter2] == targetColor:
+                break
+            while counter2 <= (maxCount2-1):
+                if self.colorMap2DArr[counter1][counter2] != targetColor:
+                    self.colorMap2DArr[counter1][counter2] = targetColor
+                    if pxSizeIs0:
+                        point = wx.Point(counter1, counter2)
+                        dc.DrawPoint(point)
+                    else:
+                        dc.SetBrush(wx.Brush(targetColor))
+                        dc.SetPen(wx.Pen(targetColor, style=wx.PENSTYLE_SOLID))
+                        dc.DrawRectangle(x=(xPos*pxSize2), y=(yPos*pxSize2), width=pxSize2, height=pxSize2)
+                    counter2 += 1
+                else:
+                    counter2 = yPos
+                    break
+            counter1 += 1
+
+        counter1 = xPos - 1
+        counter2 = yPos - 1
+
+        while counter1 >= 0:
+            if self.colorMap2DArr[counter1][counter2] == targetColor:
+                break
+            while counter2 >= 0:
+                if self.colorMap2DArr[counter1][counter2] != targetColor:
+                    self.colorMap2DArr[counter1][counter2] = targetColor
+                    if pxSizeIs0:
+                        point = wx.Point(counter1, counter2)
+                        dc.DrawPoint(point)
+                    else:
+                        dc.SetBrush(wx.Brush(targetColor))
+                        dc.SetPen(wx.Pen(targetColor, style=wx.PENSTYLE_SOLID))
+                        dc.DrawRectangle(x=(xPos*pxSize2), y=(yPos*pxSize2), width=pxSize2, height=pxSize2)
+                    counter2 -= 1
+                else:
+                    counter2 = yPos - 1
+                    break
+            counter1 -= 1'''
 
     def Quit(self, e):
         global notifySaveProjectForImgBlock
         if notifySaveProjectForImgBlock == True:
             print("areyousure?\n")
-            dlg = SaveBeforeQuitDialog2(parent=self.panel)
-            dlg.ShowModal()
-            dlg.Destroy()
+            dialog = wx.MessageDialog(self, "Do you want to save before quitting?", "Save Project Before Quitting", wx.YES_NO | wx.CANCEL | wx.CANCEL_DEFAULT | wx.ICON_INFORMATION)
+            answer = dialog.ShowModal()
+            dialog.Destroy()
+            if answer == wx.ID_YES:
+                # Do something for the "Yes" button press
+                self.SaveProject(e)
+                self.Destroy()
+            elif answer == wx.ID_NO:
+                # Do something for the "No" button press
+                self.Destroy()
+                #self.GetEventHandler().ProcessEvent(wx.EVT_WINDOW_DESTROY)
+            else:
+                # Do nothing for the "Cancel" button press
+                return
         notifySaveProjectForImgBlock = False
 
         global doesStaticImgBlockExist
         doesStaticImgBlockExist = False
+        
+        self.Destroy()
         #self.Destroy()
         #self.Close()
 
@@ -1655,6 +1888,7 @@ class GetModeData(wx.Dialog):
         self.saveButton.Bind(wx.EVT_BUTTON, self.SaveDrawingMode)
         self.closeButton.Bind(wx.EVT_BUTTON, self.OnQuit)
         self.Bind(wx.EVT_CLOSE, self.OnQuit)
+        self.Center()
         self.Show()
     
     def SaveDrawingMode(self, event):
@@ -1696,6 +1930,7 @@ class GetData(wx.Dialog):
         self.saveButton.Bind(wx.EVT_BUTTON, self.SaveConnString)
         self.closeButton.Bind(wx.EVT_BUTTON, self.OnQuit)
         self.Bind(wx.EVT_CLOSE, self.OnQuit)
+        self.Center()
         self.Show()
 
     def SaveConnString(self, event):
@@ -1759,6 +1994,7 @@ class GetData2(wx.Dialog):
         self.saveButton.Bind(wx.EVT_BUTTON, self.SaveConnString2)
         self.closeButton.Bind(wx.EVT_BUTTON, self.OnQuit)
         self.Bind(wx.EVT_CLOSE, self.OnQuit)
+        self.Center()
         self.Show()
 
     def SaveConnString2(self, event):
@@ -1834,6 +2070,7 @@ class ShowHelpDialog(wx.Dialog):
             
             self.closeButton.Bind(wx.EVT_BUTTON, self.OnQuit)
             self.Bind(wx.EVT_CLOSE, self.OnQuit)
+            self.Center()
             self.Show()
         
         def OnQuit(self, event):
@@ -1853,18 +2090,20 @@ class ErrorDialog(wx.MessageDialog):
                 wx.MessageDialog.__init__(self, parent, message="There is no active image block.", caption="Error", style=wx.OK_DEFAULT|wx.CENTRE)
             case 4:
                 wx.MessageDialog.__init__(self, parent, message="Input must be numbers", caption="Error", style=wx.OK_DEFAULT|wx.CENTRE)
+        self.Center()
+        self.Show()
     
     def OnQuit(self, event):
         self.Destroy()
         self.Close()
 
-class SaveBeforeQuitDialog2(wx.MessageDialog):
+'''class SaveBeforeQuitDialog2(wx.MessageDialog):
     def __init__(self, parent):
         wx.MessageDialog.__init__(self, parent, message="Do you want to save project before quitting?", caption="Save Project Before Quit", style=wx.OK_DEFAULT|wx.CENTRE|wx.OK|wx.CANCEL)
     
     def OnQuit(self, event):
         self.Destroy()
-        self.Close()
+        self.Close()'''
 class SaveBeforeQuitDialog(wx.Dialog):
         def __init__(self, parent):
             wx.Dialog.__init__(self, parent, wx.ID_ANY, "Save Project Before Quit", pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
@@ -1878,6 +2117,7 @@ class SaveBeforeQuitDialog(wx.Dialog):
             self.saveButton.Bind(wx.EVT_BUTTON, parent.SaveProject)
             self.closeButton.Bind(wx.EVT_BUTTON, self.OnQuit)
             self.Bind(wx.EVT_CLOSE, self.OnQuit)
+            self.Center()
             self.Show()
         
         def OnQuit(self, e):
@@ -1898,8 +2138,15 @@ class TestPanel(scrolled.ScrolledPanel):
         self.vbox.Add(self.vhbox)
         self.vhbox.Add(itemToAdd)
 
+    '''def setAddToBoxSizerVboxLeftAlign(self, itemToAdd):
+        self.vbox.Add(self.vhbox)
+        self.vhbox.Add(itemToAdd, flag=wx.ALIGN_LEFT)'''
+
     def addToBoxSizerVbox(self, itemToAdd):
         self.vbox.Add(itemToAdd)
+
+    def addToBoxSizerVBoxCentre(self, itemToAdd):
+        self.vbox.Add(window=itemToAdd, flag=wx.ALIGN_CENTRE) #wx.EXPAND?
 
     def addToBoxSizerHbox(self, itemToAdd):
         self.hbox.Add(itemToAdd)
@@ -1938,7 +2185,7 @@ def getCoordinatesFromBmp(x1, y1, xintervals, yintervals, arg1, arg2): # global 
 
 def main():
     app = wx.App()
-    wx.lib.inspection.InspectionTool().Show()
+    #wx.lib.inspection.InspectionTool().Show()
     windowClass(None)
     app.MainLoop()
     return 0
