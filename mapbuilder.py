@@ -834,7 +834,10 @@ class windowCreateImgBlock(wx.Frame):
         dc.DrawRectangle(0, 0, width=int(self.x_totalSize), height=int(self.y_totalSize))
 
         self.colorMap2DArr = [['h' for x in range(int(self.y_totalSize))] for y in range(int(self.x_totalSize))]
+        self.colorMap2DArrDrawModeandMagnNEW = [['h' for x in range(int(self.y_totalSize))] for y in range(int(self.x_totalSize))]
+        self.colorMap2DArrDrawModeandMagnOLD = [['h' for x in range(int(self.y_totalSize))] for y in range(int(self.x_totalSize))]
         self.initColorMap2DArr(val1=int(self.x_totalSize), val2=int(self.y_totalSize), color="#FFFFFF")
+        self.initColorMap2DArrDrawModeAndMagnify(val1=int(self.x_totalSize), val2=int(self.y_totalSize), color="#FFFFFF")
 
         self.rootNode = Node(data="0,0", string1="#FFFFFF")
         self.initColorMapBinTree(val1=int(self.x_totalSize), val2=int(self.y_totalSize), color="#FFFFFF")
@@ -1133,20 +1136,34 @@ class windowCreateImgBlock(wx.Frame):
         x, y = event.GetPosition()
         print(f"hi2 x: {x} y: {y}\n")
         selectedColor = self.getColorLeftRightClick(evt=event)
+        selectedColorStr = selectedColor.GetAsString(flags=wx.C2S_HTML_SYNTAX)
+        pxSize2 = self.realMagnifyVal
         
         dc = wx.MemoryDC(self.bitmapForMap)
         if(self.magnifyVal > 0):
         #For when self.MagnifyVal > 1, then need to draw a rectangle which would be the same as a point for a rescaled bitmap.
-            width2 = self.realMagnifyVal
-            height2 = self.realMagnifyVal
-            #dc.SetBrush(wx.Brush('#FFFFFF'))
-            dc.SetBrush(wx.Brush(selectedColor))
-            dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
-            dc.DrawRectangle(x, y, width2, height2)
+            match self.drawingAction:
+                case "Fill":
+                    #xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
+                    self.performFill_flood_fill(xPos=x, yPos=y, targetColor=selectedColorStr, pxSizeIs0=False, isDrawingModeAndMagnified=True)
+                case _:
+                    width2 = self.realMagnifyVal
+                    height2 = self.realMagnifyVal
+                    #dc.SetBrush(wx.Brush('#FFFFFF'))
+                    dc.SetBrush(wx.Brush(selectedColor))
+                    dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
+                    dc.DrawRectangle(x, y, width2, height2)
         else:
-            dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
-            point = wx.Point(x, y)
-            dc.DrawPoint(point)
+            match self.drawingAction:
+                case "Fill":
+                    self.performFill_flood_fill(xPos=x, yPos=y, targetColor=selectedColorStr, pxSizeIs0=True, isDrawingModeAndMagnified=False)
+                case _:
+                    dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
+                    point = wx.Point(x, y)
+                    dc.DrawPoint(point)
+                    self.updateColorMap2DArr(val1=x, val2=y, color=selectedColorStr)
+                    self.initColorMap2DArrDrawModeandMagnOLD(val1=x, val2=y, color=selectedColorStr)
+                    self.updateColorMapBinTree(val1=x, val2=y, color2=selectedColorStr)
 
         
         dc.SelectObject(wx.NullBitmap)
@@ -1155,6 +1172,7 @@ class windowCreateImgBlock(wx.Frame):
         #dc = wx.PaintDC(self)
         #dc.DrawBitmap(self.bitmapForMap, wx.Point(x, y))
         self.staticbitmap.SetBitmap(self.bitmapForMap)
+        self.staticbitmap.Refresh()
 
         global drawBool
         drawBool = True
@@ -1187,6 +1205,8 @@ class windowCreateImgBlock(wx.Frame):
                 dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
                 point = wx.Point(x, y)
                 dc.DrawPoint(point)
+                self.updateColorMap2DArr(val1=x, val2=y, color=selectedColor)
+                self.updateColorMapBinTree(val1=x, val2=y, color2=selectedColor)
             
             dc.SelectObject(wx.NullBitmap)
             #dc.SetPen(wx.Pen(self.selectedColor, style=wx.PENSTYLE_SOLID))
@@ -1239,7 +1259,7 @@ class windowCreateImgBlock(wx.Frame):
                     print("line\n")
                 case "Fill":
                     print("fill\n")
-                    self.performFill(xPos=x, yPos=y, targetColor=selectedColorStr, pxSizeIs0=True)
+                    self.performFill_flood_fill(xPos=x, yPos=y, targetColor=selectedColorStr, pxSizeIs0=True, isDrawingModeAndMagnified=False)
                     print("performfillfinished")
                     '''self.performFillForMatrix(xPos=x, yPos=y, targetColor=selectedColorStr, pxSizeIs0=True)'''
         else:
@@ -1271,6 +1291,9 @@ class windowCreateImgBlock(wx.Frame):
                     print("line\n")
                 case "Fill":
                     print("fill\n")
+                    xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
+                    self.performFill_flood_fill(xPos=xVal, yPos=yVal, targetColor=selectedColorStr, pxSizeIs0=False, isDrawingModeAndMagnified=False)
+                    print("performfillfinished2")
                     '''self.xintervals = int(self.x_totalSize)
                     self.yintervals = int(self.y_totalSize)
                     xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
@@ -1401,7 +1424,8 @@ class windowCreateImgBlock(wx.Frame):
         
         print(self.magnifyVal)
         print(self.realMagnifyVal)
-
+        
+        #self.updateDrawModeMagnified2DColorMap(magnifiedUp=True)
         self.onChangeMagnify()
 
     def bmpButton2Func(self, event : wx.EVT_BUTTON):#this is for magnify down
@@ -1412,6 +1436,7 @@ class windowCreateImgBlock(wx.Frame):
             self.realMagnifyVal = 2 ** self.magnifyVal
             self.magnifyInput.Clear()
             self.magnifyInput.AppendText(str(self.magnifyVal))
+            #self.updateDrawModeMagnified2DColorMap(magnifiedUp=False)
 
         print(self.magnifyVal)
         print(self.realMagnifyVal)
@@ -1446,7 +1471,7 @@ class windowCreateImgBlock(wx.Frame):
         self.drawingAction = tempResult
         print(tempResult)
 
-    def onReleaseFunc(self, event2 : wx.MouseEvent, option : int): #option == 1 is matrix
+    def onReleaseFunc(self, event2 : wx.MouseEvent, option : int): #option == 1 is matrix, option == 0 is drawing mode
         selectedColor = self.getColorLeftRightClick(evt=event2)
         global drawBool
         match self.drawingAction:
@@ -1472,7 +1497,7 @@ class windowCreateImgBlock(wx.Frame):
                         pxSize2 : int = self.realMagnifyVal
                         dc = wx.MemoryDC(self.bitmapForMap)
 
-                        xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2= pxSize2)
+                        xVal, yVal = getCoordinatesFromBmp(x1=x, y1=y, xintervals=self.xintervals, yintervals=self.yintervals, arg1=pxSize2, arg2=pxSize2)
 
                         dc.SetBrush(wx.Brush(selectedColor))
                         dc.SetPen(wx.Pen(selectedColor, style=wx.PENSTYLE_SOLID))
@@ -1502,6 +1527,10 @@ class windowCreateImgBlock(wx.Frame):
                 self.staticbitmap2.SetBitmap(self.bitmapForMap)
                 print("line3\n")
             case "Fill":
+                '''pxSize : int = self.magnifyVal
+                if pxSize == 0:
+                    x, y = event2.GetPosition()
+                    self.performFill_flood_fill(xPos=x, yPos=y, targetColor=selectedColor, pxSizeIs0=True)'''
                 print("fill3\n")
         
         global leftColorTrue
@@ -1696,6 +1725,53 @@ class windowCreateImgBlock(wx.Frame):
             for j in range(0, val2):
                 #print(str(i) + " " + str(j) )
                 self.colorMap2DArr[i][j] = color
+
+    def initColorMap2DArrDrawModeAndMagnify(self, val1 : int, val2 : int, color : str):
+        for i in range(0, val1):
+            for j in range(0, val2):
+                #print(str(i) + " " + str(j) )
+                self.colorMap2DArrDrawModeandMagnNEW[i][j] = color
+                self.colorMap2DArrDrawModeandMagnOLD[i][j] = color
+
+    def updateDrawModeMagnified2DColorMap(self, magnifiedUp):
+        self.colorMap2DArrDrawModeandMagnOLD = self.colorMap2DArrDrawModeandMagnNEW
+        newSizeX = self.x_totalSize * self.realMagnifyVal
+        newSizeY = self.y_totalSize * self.realMagnifyVal
+        print("newSizeX: " + str(newSizeX) + "newSizeY: " + str(newSizeY) )
+        temp1 = 0
+        i2= 0
+        i2StopVal = newSizeX / 2
+        j2= 0
+        if magnifiedUp == True:
+            self.colorMap2DArrDrawModeandMagnNEW = [['h' for x in range(newSizeY)] for y in range(newSizeX)]
+            for i in range(0, newSizeX):
+                if i2 == i2StopVal:
+                    i2 = 0
+                for j in range(0, newSizeY):
+                    if temp1 == 0:
+                        print("i is: " + str(i) + " and j: " + str(j))
+                        print("i2 is: " + str(i2) + " and j2: " + str(j2))
+                        print("newSizeX: " + str(newSizeX) + "newSizeY: " + str(newSizeY) )
+                        self.colorMap2DArrDrawModeandMagnNEW[i][j] = self.colorMap2DArrDrawModeandMagnOLD[i2][j2]
+                        temp1 += 1
+                    else:
+                        print("i is: " + str(i) + " and j: " + str(j))
+                        print("i2 is: " + str(i2) + " and j2: " + str(j2))
+                        print("newSizeX: " + str(newSizeX) + "newSizeY: " + str(newSizeY) )
+                        self.colorMap2DArrDrawModeandMagnNEW[i][j] = self.colorMap2DArrDrawModeandMagnOLD[i2][j2]
+                        temp1 = 0
+                        j2 += 1
+                j2 = 0
+                i2 += 1
+            #for i in range(0, newSizeX):
+            print("UPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUP")
+            print(self.colorMap2DArrDrawModeandMagnNEW)
+            #for i in range(0, )
+        else: #this is magnified Down
+            print("DOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWNDOWN")
+
+    def initColorMap2DArrDrawModeandMagnOLD(self, val1 : int, val2 : int, color : str):
+        self.colorMap2DArrDrawModeandMagnOLD[val1][val2] = color
     
     def updateColorMap2DArr(self, val1 : int, val2 : int, color : str):
         self.colorMap2DArr[val1][val2] = color #correct functionality.
@@ -1720,126 +1796,41 @@ class windowCreateImgBlock(wx.Frame):
         coordinates1 = str(val1) + "," + str(val2)
         self.rootNode.updateColorAtCoordinates(coordinates=coordinates1, color=color2)
 
-    def performFill(self, xPos, yPos, targetColor, pxSizeIs0):
+    def performFill_DFS(self, xPos, yPos, targetColor, pxSizeIs0, isDrawingModeAndMagnified): #this performs a dfs depth first search on a 2D array. 
+        
         dc = wx.MemoryDC(self.bitmapForMap)
-        dc.SetPen(wx.Pen(targetColor, style=wx.PENSTYLE_SOLID))
-        
-        #ex if 3,3 , then target coordinates to color is (2,2), (2,3), (2,4), (3,2), (3,3), (3,4), (4,2), (4,3), (4,4)
-        performFillList = []
-        xPosMinus = xPos - 1
-        xPosPlus = xPos + 1
-        yPosMinus = yPos - 1
-        yPosPlus = yPos + 1
-        
-        if pxSizeIs0 == True:
-            if(xPosMinus > 0):# for xPosMin
-                if(yPosMinus > 0 and (targetColor != self.colorMap2DArr[xPosMinus][yPosMinus])): # then color
-                    point = wx.Point(xPosMinus, yPosMinus)
-                    dc.DrawPoint(point)
-                    self.updateColorMap2DArr(val1=xPosMinus, val2=yPosMinus, color=targetColor)
-                    self.performFill(xPos=xPosMinus, yPos=yPosMinus, targetColor=targetColor, pxSizeIs0=True)
-                if(targetColor != self.colorMap2DArr[xPosMinus][yPos]): # then color
-                    point = wx.Point(xPosMinus, yPos)
-                    dc.DrawPoint(point)
-                    self.updateColorMap2DArr(val1=xPosMinus, val2=yPos, color=targetColor)
-                    self.performFill(xPos=xPosMinus, yPos=yPos, targetColor=targetColor, pxSizeIs0=True)
-                if(yPosPlus < self.y_totalSize and targetColor != self.colorMap2DArr[xPosMinus][yPosPlus]): # then color
-                    point = wx.Point(xPosMinus, yPosPlus)
-                    dc.DrawPoint(point)
-                    self.updateColorMap2DArr(val1=xPosMinus, val2=yPosPlus, color=targetColor)
-                    self.performFill(xPos=xPosMinus, yPos=yPosPlus, targetColor=targetColor, pxSizeIs0=True)
-            
-            # for xPos
-            if(yPosMinus > 0 and (targetColor != self.colorMap2DArr[xPos][yPosMinus])): # then color
-                point = wx.Point(xPos, yPosMinus)
-                dc.DrawPoint(point)
-                self.updateColorMap2DArr(val1=xPos, val2=yPosMinus, color=targetColor)
-                self.performFill(xPos=xPos, yPos=yPosMinus, targetColor=targetColor, pxSizeIs0=True)
-            if(targetColor != self.colorMap2DArr[xPos][yPos]): # then color
+        #dc.SetPen(wx.Pen(targetColor, style=wx.PENSTYLE_SOLID))
+        if xPos < 0 or xPos >= self.x_totalSize or yPos < 0 or yPos >= self.y_totalSize or targetColor == self.colorMap2DArr[xPos][yPos]:
+            return
+        else:
+            if pxSizeIs0 == True:
+                dc.SetPen(wx.Pen(targetColor, style=wx.PENSTYLE_SOLID))
                 point = wx.Point(xPos, yPos)
                 dc.DrawPoint(point)
                 self.updateColorMap2DArr(val1=xPos, val2=yPos, color=targetColor)
-                self.performFill(xPos=xPos, yPos=yPos, targetColor=targetColor, pxSizeIs0=True)
-            if(yPosPlus < self.y_totalSize and targetColor != self.colorMap2DArr[xPos][yPosPlus]): # then color
-                point = wx.Point(xPos, yPosPlus)
-                dc.DrawPoint(point)
-                self.updateColorMap2DArr(val1=xPos, val2=yPosPlus, color=targetColor)
-                self.performFill(xPos=xPos, yPos=yPosPlus, targetColor=targetColor, pxSizeIs0=True)
-
-            # for xPosPlus
-            if(xPosPlus <  self.x_totalSize):# for xPosMin
-                if(yPosMinus > 0 and (targetColor != self.colorMap2DArr[xPosPlus][yPosMinus])): # then color
-                    point = wx.Point(xPosPlus, yPosMinus)
-                    dc.DrawPoint(point)
-                    self.updateColorMap2DArr(val1=xPosPlus, val2=yPosMinus, color=targetColor)
-                    self.performFill(xPos=xPosPlus, yPos=yPosMinus, targetColor=targetColor, pxSizeIs0=True)
-                if(targetColor != self.colorMap2DArr[xPosPlus][yPos]): # then color
-                    point = wx.Point(xPosPlus, yPos)
-                    dc.DrawPoint(point)
-                    self.updateColorMap2DArr(val1=xPosPlus, val2=yPos, color=targetColor)
-                    self.performFill(xPos=xPosPlus, yPos=yPos, targetColor=targetColor, pxSizeIs0=True)
-                if(yPosPlus < self.y_totalSize and targetColor != self.colorMap2DArr[xPosPlus][yPosPlus]): # then color
-                    point = wx.Point(xPosPlus, yPosPlus)
-                    dc.DrawPoint(point)
-                    self.updateColorMap2DArr(val1=xPosPlus, val2=yPosPlus, color=targetColor)
-                    self.performFill(xPos=xPosPlus, yPos=yPosPlus, targetColor=targetColor, pxSizeIs0=True)
-
-
-    '''def performFill(self, xPos, yPos, targetColor, pxSizeIs0):
-        if pxSizeIs0:
-            '''
+                self.performFill_DFS(xPos=xPos+1, yPos=yPos, targetColor=targetColor, pxSizeIs0=True, isDrawingModeAndMagnified=False)
+                self.performFill_DFS(xPos=xPos-1, yPos=yPos, targetColor=targetColor, pxSizeIs0=True, isDrawingModeAndMagnified=False)
+                self.performFill_DFS(xPos=xPos, yPos=yPos+1, targetColor=targetColor, pxSizeIs0=True, isDrawingModeAndMagnified=False)
+                self.performFill_DFS(xPos=xPos, yPos=yPos-1, targetColor=targetColor, pxSizeIs0=True, isDrawingModeAndMagnified=False)
+            else:
+                pxSize2= self.realMagnifyVal
+                dc.SetBrush(wx.Brush(targetColor))
+                dc.SetPen(wx.Pen(targetColor, style=wx.PENSTYLE_SOLID))
+                dc.DrawRectangle(x=(xPos*pxSize2), y=(yPos*pxSize2), width=pxSize2, height=pxSize2)
+                self.updateColorMap2DArr(val1=xPos, val2=yPos, color=targetColor)
+                self.performFill_DFS(xPos=xPos+1, yPos=yPos, targetColor=targetColor, pxSizeIs0=False, isDrawingModeAndMagnified=False)
+                self.performFill_DFS(xPos=xPos-1, yPos=yPos, targetColor=targetColor, pxSizeIs0=False, isDrawingModeAndMagnified=False)
+                self.performFill_DFS(xPos=xPos, yPos=yPos+1, targetColor=targetColor, pxSizeIs0=False, isDrawingModeAndMagnified=False)
+                self.performFill_DFS(xPos=xPos, yPos=yPos-1, targetColor=targetColor, pxSizeIs0=False, isDrawingModeAndMagnified=False)
     
-    '''def performFillForMatrix(self, xPos, yPos, targetColor, pxSizeIs0): # is broken for now.
-        pxSize2 : int = self.realMagnifyVal
-        dc = wx.MemoryDC(self.bitmapForMap)
-        dc.SetPen(wx.Pen(targetColor, style=wx.PENSTYLE_SOLID))
-        counter1 = xPos
-        counter2 = yPos
-        maxCount = int(self.x_totalSize)
-        maxCount2 = int(self.y_totalSize)
-        breakForOuterLoop = False
-        while counter1 <= (maxCount-1):
-            print("counter1 is: "+str(counter1))
-            print("counter2 is: "+str(counter2))
-            if self.colorMap2DArr[counter1][counter2] == targetColor:
-                break
-            while counter2 <= (maxCount2-1):
-                if self.colorMap2DArr[counter1][counter2] != targetColor:
-                    self.colorMap2DArr[counter1][counter2] = targetColor
-                    if pxSizeIs0:
-                        point = wx.Point(counter1, counter2)
-                        dc.DrawPoint(point)
-                    else:
-                        dc.SetBrush(wx.Brush(targetColor))
-                        dc.SetPen(wx.Pen(targetColor, style=wx.PENSTYLE_SOLID))
-                        dc.DrawRectangle(x=(xPos*pxSize2), y=(yPos*pxSize2), width=pxSize2, height=pxSize2)
-                    counter2 += 1
-                else:
-                    counter2 = yPos
-                    break
-            counter1 += 1
+    def performFill_flood_fill(self, xPos, yPos, targetColor, pxSizeIs0, isDrawingModeAndMagnified):
+        if isDrawingModeAndMagnified == True:
+            print("isDrawingModeAndMagnifiedisDrawingModeAndMagnifiedisDrawingModeAndMagnifiedisDrawingModeAndMagnified")
+        oldColor = self.colorMap2DArr[xPos][yPos]
+        if oldColor == targetColor:
+            return
+        self.performFill_DFS(xPos, yPos, targetColor, pxSizeIs0, isDrawingModeAndMagnified)
 
-        counter1 = xPos - 1
-        counter2 = yPos - 1
-
-        while counter1 >= 0:
-            if self.colorMap2DArr[counter1][counter2] == targetColor:
-                break
-            while counter2 >= 0:
-                if self.colorMap2DArr[counter1][counter2] != targetColor:
-                    self.colorMap2DArr[counter1][counter2] = targetColor
-                    if pxSizeIs0:
-                        point = wx.Point(counter1, counter2)
-                        dc.DrawPoint(point)
-                    else:
-                        dc.SetBrush(wx.Brush(targetColor))
-                        dc.SetPen(wx.Pen(targetColor, style=wx.PENSTYLE_SOLID))
-                        dc.DrawRectangle(x=(xPos*pxSize2), y=(yPos*pxSize2), width=pxSize2, height=pxSize2)
-                    counter2 -= 1
-                else:
-                    counter2 = yPos - 1
-                    break
-            counter1 -= 1'''
 
     def Quit(self, e):
         global notifySaveProjectForImgBlock
