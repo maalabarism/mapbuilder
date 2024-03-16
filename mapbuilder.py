@@ -30,6 +30,7 @@ notifySaveProjectForMap = False
 notifySaveProjectForMap2 = False
 notifySaveProjectForImgBlock = False
 returnFromFrameClass = False
+isProjectSaved = False
 #globalBmp : wx.Bitmap = None
 
 class windowClass(wx.Frame):
@@ -297,6 +298,7 @@ class windowClass(wx.Frame):
 
     def SaveProject(self, event):
         global isThereMap
+        global isProjectSaved
         if isThereMap == False:
             print("error there is no active img block.")
             dlg = ErrorDialog(parent = self.panel, option=0)
@@ -331,6 +333,7 @@ class windowClass(wx.Frame):
             f.write(datastr)
             
             #os.remove(pathname)
+            isProjectSaved = True
             openFileDialog.Destroy()
 
     def Config(self, e):
@@ -520,10 +523,11 @@ class windowClass(wx.Frame):
         dlg.Destroy()
 
     def Quit(self, e):
+        global isProjectSaved
         global notifySaveProjectForMap
-        if notifySaveProjectForMap == True:
+        if notifySaveProjectForMap == True and isProjectSaved == False:
             print("areyousure?\n")
-            dialog = wx.MessageDialog(self, "Do you want to save before quitting?", "Save Project Before Quitting", wx.YES_NO | wx.CANCEL | wx.CANCEL_DEFAULT | wx.ICON_INFORMATION)
+            dialog = wx.MessageDialog(self, "Do you want to save project before quitting?", "Save Project Before Quitting", wx.YES_NO | wx.CANCEL | wx.CANCEL_DEFAULT | wx.ICON_INFORMATION)
             answer = dialog.ShowModal()
             dialog.Destroy()
             if answer == wx.ID_YES:
@@ -532,12 +536,14 @@ class windowClass(wx.Frame):
                 self.Destroy()
             elif answer == wx.ID_NO:
                 # Do something for the "No" button press
+                isProjectSaved = False
                 self.Destroy()
                 pass
             else:
                 # Do nothing for the "Cancel" button press
                 return
         notifySaveProjectForMap = False
+        isProjectSaved = False
         self.Destroy()
 
 
@@ -961,6 +967,7 @@ class windowCreateImgBlock(wx.Frame):
 
     def SaveProject(self, event):
         global isThereImgBlock
+        global isProjectSaved
         if isThereImgBlock == False:
             print("error there is no active img block.")
             dlg = ErrorDialog(parent = self.panel, option=3)
@@ -995,6 +1002,7 @@ class windowCreateImgBlock(wx.Frame):
             datastr = data.decode("utf-8")
             f.write(datastr)
             
+            isProjectSaved = True
             openFileDialog.Destroy()
 
     def OpenProject(self, e):
@@ -1084,7 +1092,7 @@ class windowCreateImgBlock(wx.Frame):
 
     def OnColourChanged(self, event : wx.EVT_COLOUR_CHANGED):
         self.tempColor : wx.Colour = event.GetColour() #is of wx.Colour type
-        str1 = "Selected color: " + self.tempColor.GetAsString(flags=wx.C2S_NAME)
+        str1 = "Selected color: " + self.tempColor.GetAsString(flags=wx.C2S_CSS_SYNTAX)
         self.log1.Clear()
         self.log1.AppendText(str1)
 
@@ -1132,6 +1140,8 @@ class windowCreateImgBlock(wx.Frame):
     def on_clic(self, event : wx.MouseEvent):
         global notifySaveProjectForImgBlock
         notifySaveProjectForImgBlock = True
+        global isProjectSaved
+        isProjectSaved = False
 
         x, y = event.GetPosition()
         print(f"hi2 x: {x} y: {y}\n")
@@ -1226,6 +1236,8 @@ class windowCreateImgBlock(wx.Frame):
     def on_clicMatrix(self, event : wx.MouseEvent):
         global notifySaveProjectForImgBlock
         notifySaveProjectForImgBlock = True
+        global isProjectSaved
+        isProjectSaved = False
 
         selectedColor = self.getColorLeftRightClick(evt=event)
         selectedColorStr = selectedColor.GetAsString(flags=wx.C2S_HTML_SYNTAX)
@@ -1427,6 +1439,8 @@ class windowCreateImgBlock(wx.Frame):
         
         #self.updateDrawModeMagnified2DColorMap(magnifiedUp=True)
         self.onChangeMagnify()
+        if self.drawingMode == "Painting Mode":
+                self.updateDrawModeMagnified2DColorMap(magnifiedUp=True)
 
     def bmpButton2Func(self, event : wx.EVT_BUTTON):#this is for magnify down
         print("here2")
@@ -1442,6 +1456,9 @@ class windowCreateImgBlock(wx.Frame):
         print(self.realMagnifyVal)
 
         self.onChangeMagnify()
+        if self.magnifyVal > 0:
+            if self.drawingMode == "Painting Mode":
+                self.updateDrawModeMagnified2DColorMap(magnifiedUp=False)
 
     def onChangeMagnify(self):
         #self.magnifyVal = self.magnifyInput.GetValue()
@@ -1734,36 +1751,82 @@ class windowCreateImgBlock(wx.Frame):
                 self.colorMap2DArrDrawModeandMagnOLD[i][j] = color
 
     def updateDrawModeMagnified2DColorMap(self, magnifiedUp):
-        self.colorMap2DArrDrawModeandMagnOLD = self.colorMap2DArrDrawModeandMagnNEW
+        #tempVal = self.colorMap2DArrDrawModeandMagnNEW or tempVal = self.colorMap2DArrDrawModeandMagnOLD ?? 
+        tempVal = self.colorMap2DArrDrawModeandMagnOLD
         newSizeX = self.x_totalSize * self.realMagnifyVal
         newSizeY = self.y_totalSize * self.realMagnifyVal
-        print("newSizeX: " + str(newSizeX) + "newSizeY: " + str(newSizeY) )
+        print("newSizeX: " + str(newSizeX) + " newSizeY: " + str(newSizeY) )
         temp1 = 0
+        temp2 = 0
         i2= 0
-        i2StopVal = newSizeX / 2
+        #i2StopVal = newSizeX / 2
+        i2StopVal = newSizeX / self.realMagnifyVal
         j2= 0
+        print("realmagnifyval = " + str(self.realMagnifyVal) + "magnifyval = " + str(self.magnifyVal))
+
+        if self.magnifyVal > 1:
+            comparedVal = (self.magnifyVal + 1)
+        else:
+            comparedVal = self.magnifyVal
+
+
         if magnifiedUp == True:
             self.colorMap2DArrDrawModeandMagnNEW = [['h' for x in range(newSizeY)] for y in range(newSizeX)]
+            #print(self.colorMap2DArrDrawModeandMagnNEW)
             for i in range(0, newSizeX):
+                #if i2 == i2StopVal:
+                    #i2 = 0
+                #
                 if i2 == i2StopVal:
                     i2 = 0
+                j2 = 0
                 for j in range(0, newSizeY):
-                    if temp1 == 0:
+                    if temp1 == comparedVal:
+                        #print("i is: " + str(i) + " and j: " + str(j))
+                        #print("i2 is: " + str(i2) + " and j2: " + str(j2))
+                        #print("newSizeX: " + str(newSizeX) + "newSizeY: " + str(newSizeY) )
+                        self.colorMap2DArrDrawModeandMagnNEW[i][j] = self.colorMap2DArrDrawModeandMagnOLD[i2][j2]
+                        temp1 = 0
+                        j2 += 1
+                    else:
+                        #print("i is: " + str(i) + " and j: " + str(j))
+                        #print("i2 is: " + str(i2) + " and j2: " + str(j2))
+                        #print("newSizeX: " + str(newSizeX) + "newSizeY: " + str(newSizeY) )
+                        self.colorMap2DArrDrawModeandMagnNEW[i][j] = self.colorMap2DArrDrawModeandMagnOLD[i2][j2]
+                        temp1 += 1
+                    '''if temp1 == 0:
                         print("i is: " + str(i) + " and j: " + str(j))
                         print("i2 is: " + str(i2) + " and j2: " + str(j2))
-                        print("newSizeX: " + str(newSizeX) + "newSizeY: " + str(newSizeY) )
+                        #print("newSizeX: " + str(newSizeX) + "newSizeY: " + str(newSizeY) )
                         self.colorMap2DArrDrawModeandMagnNEW[i][j] = self.colorMap2DArrDrawModeandMagnOLD[i2][j2]
                         temp1 += 1
                     else:
                         print("i is: " + str(i) + " and j: " + str(j))
                         print("i2 is: " + str(i2) + " and j2: " + str(j2))
-                        print("newSizeX: " + str(newSizeX) + "newSizeY: " + str(newSizeY) )
+                        #print("newSizeX: " + str(newSizeX) + "newSizeY: " + str(newSizeY) )
                         self.colorMap2DArrDrawModeandMagnNEW[i][j] = self.colorMap2DArrDrawModeandMagnOLD[i2][j2]
                         temp1 = 0
-                        j2 += 1
-                j2 = 0
-                i2 += 1
+                        j2 += 1'''
+                #j2 = 0
+                if temp2 == comparedVal:
+                    temp2 = 0
+                    i2 += 1
+                else:
+                    temp2 += 1
+                '''if temp2 == 0: #need to make code dynamic so increments w.r.t self.realMagnifyVal 2^n * 2x
+                    temp2 += 1
+                elif temp2 == self.magnifyVal:
+                    temp2 = 0
+                    i2 += 1'''
+                
+                '''if temp2 == 0: #need to make code dynamic so increments w.r.t self.realMagnifyVal 2^n * 2x
+                    temp2 += 1
+                else:
+                    temp2 = 0
+                    i2 += 1'''
             #for i in range(0, newSizeX):
+            self.colorMap2DArrDrawModeandMagnOLD = tempVal
+            print("newSizeX: " + str(newSizeX) + "newSizeY: " + str(newSizeY) )
             print("UPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUPUP")
             print(self.colorMap2DArrDrawModeandMagnNEW)
             #for i in range(0, )
@@ -1834,9 +1897,10 @@ class windowCreateImgBlock(wx.Frame):
 
     def Quit(self, e):
         global notifySaveProjectForImgBlock
-        if notifySaveProjectForImgBlock == True:
+        global isProjectSaved
+        if notifySaveProjectForImgBlock == True and isProjectSaved == False:
             print("areyousure?\n")
-            dialog = wx.MessageDialog(self, "Do you want to save before quitting?", "Save Project Before Quitting", wx.YES_NO | wx.CANCEL | wx.CANCEL_DEFAULT | wx.ICON_INFORMATION)
+            dialog = wx.MessageDialog(self, "Do you want to save the project before quitting?", "Save Project Before Quitting", wx.YES_NO | wx.CANCEL | wx.CANCEL_DEFAULT | wx.ICON_INFORMATION)
             answer = dialog.ShowModal()
             dialog.Destroy()
             if answer == wx.ID_YES:
@@ -1845,6 +1909,7 @@ class windowCreateImgBlock(wx.Frame):
                 self.Destroy()
             elif answer == wx.ID_NO:
                 # Do something for the "No" button press
+                isProjectSaved = False
                 self.Destroy()
                 #self.GetEventHandler().ProcessEvent(wx.EVT_WINDOW_DESTROY)
             else:
@@ -1855,6 +1920,7 @@ class windowCreateImgBlock(wx.Frame):
         global doesStaticImgBlockExist
         doesStaticImgBlockExist = False
         
+        isProjectSaved = False
         self.Destroy()
         #self.Destroy()
         #self.Close()
