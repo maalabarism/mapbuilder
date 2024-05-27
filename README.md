@@ -32,6 +32,7 @@ To save your work to reopen on the program later, save work by clicking File>>Sa
 To continue your work, click File>>Open block project to search for an .SMB file and continue your work.
 
 ##Installation
-To run Simple Map Builder and Sprite Editor, it can be run directly from Python by running mapbuilder.py from the root directory, with the needed .ico found in the same directory as mapbuilder.py. 
+To run Simple Map Builder and Sprite Editor with Python, run  mapbuilder.py from the root directory, with the needed .ico found in the same directory as mapbuilder.py. 
 To run this program, Python 3.10.6 is used, and the python module wxPython==4.2.0 is required.
 
+To install the Simple Map Builder and Sprite Editor, download the zip file: [https://drive.google.com/uc?export=download&id=16BQ9Ee1y35aF5r_HbvVw6tIk0Nx4g99j](HERE). After downloading, extract the folder anywhere in your PC, and run the mapbuilder.exe file that is inside the folder, to run the program. Afterwards you could create a shortcut of mapbuilder.exe for easy acces.
