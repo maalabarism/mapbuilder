@@ -1,7 +1,7 @@
-#Simple Map Builder and Sprite Editor
+# Simple Map Builder and Sprite Editor
 ##Tutorial
 In the "File" option, top-left corner, presents all the program options.
-###Create a 2D map project
+### Create a 2D map project
 File>>New Project
 Input dimensions wanted, squares must be divisible by total x, y, (map) size. Values are in pixels. 
 For example,
@@ -16,7 +16,7 @@ To save your map as a PNG when done, click File>>Save map.
 To save your work to reopen on the program later, save work by clicking File>>Save project, to save your work as a .SMP(simple map project) file.
 To continue your work, click File>>Open Project to search for an .SMP file and continue your work.
 
-###Create Sprites or Pixel Art
+### Create Sprites or Pixel Art
 In the "File" option, top-left corner, presents all the program options.
 To create sprites or pixel art, select File>>Create image block.
 Select between Matrix or Painting mode. Matrix mode creates a matrix for you to draw on, and painting mode is more fluid, no matrix. I personally prefer the matrix mode.
@@ -31,7 +31,7 @@ To save your image block as a PNG when done, click File>>Save image.
 To save your work to reopen on the program later, save work by clicking File>>Save create block project, to save your work as a .SMB(simple map block) file.
 To continue your work, click File>>Open block project to search for an .SMB file and continue your work.
 
-##Installation
+## Installation
 To run Simple Map Builder and Sprite Editor with Python, run  mapbuilder.py from the root directory, with the needed .ico found in the same directory as mapbuilder.py. 
 To run this program, Python 3.10.6 is used, and the python module wxPython==4.2.0 is required.
 
