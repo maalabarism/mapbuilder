@@ -16,7 +16,7 @@ To save your map as a PNG when done, click File>>Save map.
 To save your work to reopen on the program later, save work by clicking File>>Save project, to save your work as a .SMP(simple map project) file.
 To continue your work, click File>>Open Project to search for an .SMP file and continue your work.
 
-![map demo screenshot](./image/mapdemo.png)
+![map demo screenshot](./images/mapdemo.png)
 
 ### Create Sprites or Pixel Art
 In the "File" option, top-left corner, presents all the program options.
