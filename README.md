@@ -1,5 +1,5 @@
 # Simple Map Builder and Sprite Editor
-##Tutorial
+## Tutorial
 In the "File" option, top-left corner, presents all the program options.
 ### Create a 2D map project
 File>>New Project
