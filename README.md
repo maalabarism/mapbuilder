@@ -16,6 +16,8 @@ To save your map as a PNG when done, click File>>Save map.
 To save your work to reopen on the program later, save work by clicking File>>Save project, to save your work as a .SMP(simple map project) file.
 To continue your work, click File>>Open Project to search for an .SMP file and continue your work.
 
+![map demo screenshot](./image/mapdemo.png)
+
 ### Create Sprites or Pixel Art
 In the "File" option, top-left corner, presents all the program options.
 To create sprites or pixel art, select File>>Create image block.
@@ -30,6 +32,8 @@ Redo, and Undo options are present in Edit>>Redo, and Edit>>Redo, also with shor
 To save your image block as a PNG when done, click File>>Save image.
 To save your work to reopen on the program later, save work by clicking File>>Save create block project, to save your work as a .SMB(simple map block) file.
 To continue your work, click File>>Open block project to search for an .SMB file and continue your work.
+
+![pixel art screenshot](./images/wizarddemopic.png)
 
 ## Installation
 To run Simple Map Builder and Sprite Editor with Python, run  mapbuilder.py from the root directory, with the needed .ico found in the same directory as mapbuilder.py. 
