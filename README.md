@@ -39,4 +39,4 @@ To continue your work, click File>>Open block project to search for an .SMB file
 To run Simple Map Builder and Sprite Editor with Python, run  mapbuilder.py from the root directory, with the needed .ico found in the same directory as mapbuilder.py. 
 To run this program, Python 3.10.6 is used, and the python module wxPython==4.2.0 is required.
 
-To install the Simple Map Builder and Sprite Editor, download the .exe file: [HERE](https://drive.google.com/uc?export=download&id=1CuKpfsluzEGNCpaiZkPTbXR9QOo1zMkz). After downloading, place the mapbuilder.exe file anywhere you'd like on your computer. Then just run mapbuilder.exe, enjoy!
+To install the Simple Map Builder and Sprite Editor, download the zip file: [HERE](https://drive.google.com/uc?export=download&id=1O6NiDIm4ElCl7PLApxUy1ikEsv_A7gMK). After downloading, extract mapbuilder.exe anywhere in your PC. Then just run mapbuilder.exe, and enjoy!
