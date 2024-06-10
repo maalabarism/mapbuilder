@@ -12,6 +12,14 @@ from binarytreeclasses import Node
 #from binarytree import Node
 #import time
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 #global variables:
 doesStaticMapExist = False
 doesStaticImgBlockExist = False
@@ -114,7 +122,8 @@ class windowClass(wx.Frame):
         self.SetSize(wx.Size(1000, 1000))
         self.Centre()
 
-        icon = wx.Icon('C:\\Users\\change\\source\\Python\\mapbuilder\\MB_ICON.ico', wx.BITMAP_TYPE_ANY)
+        #icon = wx.Icon('C:\\Users\\change\\source\\Python\\mapbuilder\\MB_ICON.ico', wx.BITMAP_TYPE_ANY)
+        icon = wx.Icon(resource_path('./MB_ICON.ico'), wx.BITMAP_TYPE_ANY)
         self.SetIcon(icon)
 
         self.Show(True)
@@ -604,8 +613,10 @@ class windowCreateImgBlock(wx.Frame):
         self.panel.setupScrolling()
 
         ##############ADDING TWO BUTTONS WITH BITMAP IMGS inside a vertical boxsizer, then added to self.panel specified box sizer.###########
-        self.bmpButton1 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap('./buttonup2.png'), pos=(0, 0), size=(32, 16))
-        self.bmpButton2 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap('./buttondown.png'), pos=(0, 0), size=(32, 16))
+        self.bmpButton1 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap(resource_path('./buttonup2.png')), pos=(0, 0), size=(32, 16))
+        self.bmpButton2 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap(resource_path('./buttondown.png')), pos=(0, 0), size=(32, 16))
+        #self.bmpButton1 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap('./buttonup2.png'), pos=(0, 0), size=(32, 16))
+        #self.bmpButton2 = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=wx.Bitmap('./buttondown.png'), pos=(0, 0), size=(32, 16))
         self.Bind(wx.EVT_BUTTON, self.bmpButton1Func, self.bmpButton1)
         self.Bind(wx.EVT_BUTTON, self.bmpButton2Func, self.bmpButton2)
         self.boxSizer = wx.BoxSizer(wx.VERTICAL)
@@ -715,7 +726,8 @@ class windowCreateImgBlock(wx.Frame):
         self.SetSize(wx.Size(1000, 1000))
         self.Centre()
 
-        icon = wx.Icon('C:\\Users\\change\\source\\Python\\mapbuilder\\MB_ICON.ico', wx.BITMAP_TYPE_ANY)
+        #icon = wx.Icon('C:\\Users\\change\\source\\Python\\mapbuilder\\MB_ICON.ico', wx.BITMAP_TYPE_ANY)
+        icon = wx.Icon(resource_path('./MB_ICON.ico'), wx.BITMAP_TYPE_ANY)
         self.SetIcon(icon)
 
         
